@@ -24,7 +24,7 @@ import remarkAdmonitionToBlockquoteCallout from "remark-admonition-to-blockquote
 import remarkDirective from "remark-directive"; /* Handle directives */
 import remarkMath from "remark-math";
 import remarkSectionize from "remark-sectionize";
-import { expressiveCodeConfig, fontConfig, fontsList, plantumlConfig, siteConfig } from "./src/config";
+import { expressiveCodeConfig, fontConfig, fontsList, galleryConfig, plantumlConfig, siteConfig } from "./src/config";
 import { collectUsedFontCssVars } from "./src/utils/fontHelper";
 import I18nKey from "./src/i18n/i18nKey";
 import { i18n } from "./src/i18n/translation";
@@ -52,6 +52,24 @@ const adapter = process.env.CF_WORKERS
 			prerenderEnvironment: "node",
 		})
 	: undefined;
+
+const getGalleryPaginationUrls = () => {
+	if (!siteConfig.pages.gallery) return [];
+
+	const paginationConfig = galleryConfig.pagination || {};
+	const enablePagination = paginationConfig.enabled ?? false;
+	if (!enablePagination) return [];
+
+	const albumsPerPage = Math.max(1, paginationConfig.albumsPerPage || 12);
+	const totalPages = Math.ceil((galleryConfig.albums?.length || 0) / albumsPerPage);
+
+	if (totalPages <= 1) return [];
+
+	return Array.from(
+		{ length: totalPages - 1 },
+		(_, index) => new URL(`/gallery/${index + 2}/`, siteConfig.site_url).toString(),
+	);
+};
 
 // https://astro.build/config
 export default defineConfig({
@@ -212,6 +230,7 @@ export default defineConfig({
 		}),
 		svelte(),
 		sitemap({
+			customPages: getGalleryPaginationUrls(),
 			filter: (page) => {
 				// 根据页面开关配置过滤sitemap
 				const url = new URL(page);
