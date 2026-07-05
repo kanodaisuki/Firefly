@@ -1,0 +1,77 @@
+---
+import type { GetStaticPaths } from "astro";
+import GalleryIndexContent from "@/components/pages/gallery/GalleryIndexContent.astro";
+import GalleryPagination from "@/components/pages/gallery/GalleryPagination.astro";
+import { galleryConfig, siteConfig } from "@/config";
+import I18nKey from "@/i18n/i18nKey";
+import { i18n } from "@/i18n/translation";
+import MainGridLayout from "@/layouts/MainGridLayout.astro";
+import { getAlbumCover, scanAlbumPhotos } from "@/utils/gallery-utils";
+
+export const getStaticPaths = (() => {
+	const paginationConfig = galleryConfig.pagination || {};
+	const enablePagination = paginationConfig.enabled ?? false;
+	const albumsPerPage = Math.max(1, paginationConfig.albumsPerPage || 12);
+
+	if (!siteConfig.pages.gallery || !enablePagination) {
+		return [];
+	}
+
+	const totalPages = Math.ceil(galleryConfig.albums.length / albumsPerPage);
+	if (totalPages <= 1) {
+		return [];
+	}
+
+	return Array.from({ length: totalPages - 1 }, (_, index) => {
+		const page = index + 2;
+		return { params: { page: String(page) } };
+	});
+}) satisfies GetStaticPaths;
+
+// 检查页面是否启用
+if (!siteConfig.pages.gallery) {
+	return Astro.redirect("/404/");
+}
+
+const title = i18n(I18nKey.gallery);
+const description = i18n(I18nKey.galleryDescription);
+
+const parseAlbumTime = (date?: string) => {
+	if (!date) return 0;
+	const timestamp = Date.parse(date);
+	return Number.isNaN(timestamp) ? 0 : timestamp;
+};
+
+const paginationConfig = galleryConfig.pagination || {};
+const enablePagination = paginationConfig.enabled ?? false;
+const albumsPerPage = Math.max(1, paginationConfig.albumsPerPage || 12);
+
+if (!enablePagination) {
+	return Astro.redirect("/gallery/");
+}
+
+// 构建相册数据（扫描照片、获取封面）
+const allAlbums = [...galleryConfig.albums]
+	.sort((a, b) => parseAlbumTime(b.date) - parseAlbumTime(a.date))
+	.map((album) => {
+		const photos = scanAlbumPhotos(album.id);
+		const cover = getAlbumCover(album, photos);
+		return { ...album, cover, photoCount: photos.length };
+	});
+
+const totalPages = Math.max(1, Math.ceil(allAlbums.length / albumsPerPage));
+const currentPage = Number.parseInt(Astro.params.page || "", 10);
+
+if (!Number.isInteger(currentPage) || currentPage < 2 || currentPage > totalPages) {
+	return Astro.redirect("/404/");
+}
+
+const start = (currentPage - 1) * albumsPerPage;
+const end = start + albumsPerPage;
+const albums = allAlbums.slice(start, end);
+---
+
+<MainGridLayout title={title} description={description}>
+	<GalleryIndexContent title={title} description={description} albums={albums} />
+	<GalleryPagination currentPage={currentPage} totalPages={totalPages} />
+</MainGridLayout>

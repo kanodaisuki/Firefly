@@ -13,6 +13,7 @@ export type {
 	FooterConfig,
 	GalleryAlbum,
 	GalleryConfig,
+	GalleryPaginationConfig,
 	LicenseConfig,
 	MusicPlayerConfig,
 	NavBarConfig,

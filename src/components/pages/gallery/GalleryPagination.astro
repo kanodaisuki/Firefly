@@ -1,0 +1,159 @@
+---
+import { Icon } from "astro-icon/components";
+import I18nKey from "@/i18n/i18nKey";
+import { i18n } from "@/i18n/translation";
+import { url } from "@/utils/url-utils";
+
+interface Props {
+	currentPage: number;
+	totalPages: number;
+	basePath?: string;
+}
+
+const { currentPage, totalPages, basePath = "/gallery" } = Astro.props;
+
+const HIDDEN = -1;
+const total = Math.max(1, Number(totalPages) || 1);
+const current = Math.min(Math.max(1, Number(currentPage) || 1), total);
+
+const MAX_VISIBLE_NUMBERS = 5;
+const WINDOW_SIZE = Math.max(1, MAX_VISIBLE_NUMBERS - 2);
+
+const pages: number[] = [];
+if (total <= MAX_VISIBLE_NUMBERS) {
+	for (let i = 1; i <= total; i++) pages.push(i);
+} else {
+	let leftPage = Math.max(2, current - Math.floor(WINDOW_SIZE / 2));
+	let rightPage = Math.min(total - 1, leftPage + WINDOW_SIZE - 1);
+
+	if (rightPage - leftPage + 1 < WINDOW_SIZE) {
+		leftPage = Math.max(2, rightPage - WINDOW_SIZE + 1);
+	}
+
+	pages.push(1);
+	if (leftPage > 2) pages.push(HIDDEN);
+	for (let i = leftPage; i <= rightPage; i++) pages.push(i);
+	if (rightPage < total - 1) pages.push(HIDDEN);
+	pages.push(total);
+}
+
+const getPageUrl = (p: number) => {
+	if (p <= 1) return `${basePath}/`;
+	return `${basePath}/${p}/`;
+};
+
+const prevUrl = current > 1 ? getPageUrl(current - 1) : undefined;
+const nextUrl = current < total ? getPageUrl(current + 1) : undefined;
+---
+
+{total > 1 && (
+	<div class="pagination-wrapper mt-6">
+		<div class="mobile-pagination lg:hidden flex items-center justify-center gap-3 px-2">
+			{prevUrl ? (
+				<a
+					href={url(prevUrl)}
+					aria-label={i18n(I18nKey.paginationPrev)}
+					class="btn-card overflow-hidden rounded-lg text-(--primary) w-11 h-11"
+				>
+					<Icon is:inline name="material-symbols:chevron-left-rounded" class="text-[1.75rem]" aria-hidden="true" />
+				</a>
+			) : (
+				<button
+					type="button"
+					disabled
+					aria-label={i18n(I18nKey.paginationPrev)}
+					class="btn-card overflow-hidden rounded-lg text-(--primary) w-11 h-11 disabled pointer-events-none"
+				>
+					<Icon is:inline name="material-symbols:chevron-left-rounded" class="text-[1.75rem]" aria-hidden="true" />
+				</button>
+			)}
+
+			<div class="btn-card flex items-center rounded-lg px-4 h-11 gap-1.5" aria-current="page">
+				<span class="text-base font-bold text-(--primary)">{current}</span>
+				<span class="text-sm text-neutral-500 dark:text-neutral-500">/</span>
+				<span class="text-base font-bold text-neutral-700 dark:text-neutral-300">{total}</span>
+			</div>
+
+			{nextUrl ? (
+				<a
+					href={url(nextUrl)}
+					aria-label={i18n(I18nKey.paginationNext)}
+					class="btn-card overflow-hidden rounded-lg text-(--primary) w-11 h-11"
+				>
+					<Icon is:inline name="material-symbols:chevron-right-rounded" class="text-[1.75rem]" aria-hidden="true" />
+				</a>
+			) : (
+				<button
+					type="button"
+					disabled
+					aria-label={i18n(I18nKey.paginationNext)}
+					class="btn-card overflow-hidden rounded-lg text-(--primary) w-11 h-11 disabled pointer-events-none"
+				>
+					<Icon is:inline name="material-symbols:chevron-right-rounded" class="text-[1.75rem]" aria-hidden="true" />
+				</button>
+			)}
+		</div>
+
+		<div class="desktop-pagination hidden lg:flex items-center gap-3 min-w-max justify-center overflow-x-auto px-2">
+			{prevUrl ? (
+				<a
+					href={url(prevUrl)}
+					aria-label={i18n(I18nKey.paginationPrev)}
+					class="btn-card overflow-hidden rounded-lg text-(--primary) w-11 h-11"
+				>
+					<Icon is:inline name="material-symbols:chevron-left-rounded" class="text-[1.75rem]" aria-hidden="true" />
+				</a>
+			) : (
+				<button
+					type="button"
+					disabled
+					aria-label={i18n(I18nKey.paginationPrev)}
+					class="btn-card overflow-hidden rounded-lg text-(--primary) w-11 h-11 disabled pointer-events-none"
+				>
+					<Icon is:inline name="material-symbols:chevron-left-rounded" class="text-[1.75rem]" aria-hidden="true" />
+				</button>
+			)}
+
+			{pages.map((p) => {
+				if (p === HIDDEN) {
+					return <Icon is:inline name="material-symbols:more-horiz" class="w-11 h-11 flex items-center justify-center text-neutral-700 dark:text-neutral-300" aria-hidden="true" />;
+				}
+				if (p === current) {
+					return (
+						<div class="h-11 w-11 rounded-lg bg-(--primary) flex items-center justify-center font-bold text-white dark:text-black/70" aria-current="page">
+							{p}
+						</div>
+					);
+				}
+				return (
+					<a
+						href={url(getPageUrl(p))}
+						aria-label={`${i18n(I18nKey.paginationPage)} ${p}`}
+						class="btn-card w-11 h-11 rounded-lg overflow-hidden active:scale-[0.85] text-neutral-700 dark:text-neutral-300"
+					>
+						{p}
+					</a>
+				);
+			})}
+
+			{nextUrl ? (
+				<a
+					href={url(nextUrl)}
+					aria-label={i18n(I18nKey.paginationNext)}
+					class="btn-card overflow-hidden rounded-lg text-(--primary) w-11 h-11"
+				>
+					<Icon is:inline name="material-symbols:chevron-right-rounded" class="text-[1.75rem]" aria-hidden="true" />
+				</a>
+			) : (
+				<button
+					type="button"
+					disabled
+					aria-label={i18n(I18nKey.paginationNext)}
+					class="btn-card overflow-hidden rounded-lg text-(--primary) w-11 h-11 disabled pointer-events-none"
+				>
+					<Icon is:inline name="material-symbols:chevron-right-rounded" class="text-[1.75rem]" aria-hidden="true" />
+				</button>
+			)}
+		</div>
+	</div>
+)}

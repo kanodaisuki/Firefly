@@ -39,4 +39,39 @@ export const galleryConfig: GalleryConfig = {
 	// 瀑布流最小列宽(px)，浏览器根据容器宽度自动计算列数，默认 240
 	// 值越小列数越多，值越大列数越少
 	columnWidth: 240,
+
+	// 相册首页布局配置
+	indexLayout: {
+		// grid: 固定网格（1/2/3 列）
+		// flow: 流式布局（自动填充列）
+		mode: "grid",
+
+		// 是否启用相册搜索框
+		enableSearch: false,
+
+		// 是否启用标签筛选
+		enableTagFilter: false,
+
+		// flow 模式下的最小卡片宽度(px)
+		flowMinColumnWidth: 320,
+
+		// flow 模式下的最大列数
+		flowMaxColumns: 4,
+
+		// flow 模式下的卡片间距(px)
+		flowGap: 16,
+
+		// 是否根据封面横竖图自动切换卡片比例
+		// 横图: 3:2，竖图: 2:3
+		adaptiveAspectRatio: true,
+	},
+
+	// 相册分页配置
+	pagination: {
+		// 是否开启分页
+		enabled: true,
+
+		// 每页相册数量
+		albumsPerPage: 6,
+	},
 };

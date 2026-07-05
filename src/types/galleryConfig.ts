@@ -33,4 +33,6 @@ export type GalleryPaginationConfig = {
 export type GalleryConfig = {
 	albums: GalleryAlbum[];
 	columnWidth?: number; // 瀑布流最小列宽(px)，默认 240，浏览器根据容器宽度自动计算列数
+	indexLayout?: GalleryIndexLayoutConfig; // 相册首页布局配置
+	pagination?: GalleryPaginationConfig; // 相册分页配置
 };

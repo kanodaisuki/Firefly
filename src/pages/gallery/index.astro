@@ -1,6 +1,6 @@
 ---
-import { Icon } from "astro-icon/components";
-import AlbumCard from "@/components/pages/gallery/AlbumCard.astro";
+import GalleryIndexContent from "@/components/pages/gallery/GalleryIndexContent.astro";
+import GalleryPagination from "@/components/pages/gallery/GalleryPagination.astro";
 import { galleryConfig, siteConfig } from "@/config";
 import I18nKey from "@/i18n/i18nKey";
 import { i18n } from "@/i18n/translation";
@@ -22,8 +22,8 @@ const albumsPerPage = Math.max(1, paginationConfig.albumsPerPage || 12);
 // 构建相册数据（扫描照片、获取封面）
 const allAlbums = getSortedAlbums(galleryConfig.albums);
 
-// 收集所有标签用于筛选
-const allTags = [...new Set(albums.flatMap((a) => a.tags || []))].sort();
+const totalPages = Math.max(1, Math.ceil(allAlbums.length / albumsPerPage));
+const albums = enablePagination ? allAlbums.slice(0, albumsPerPage) : allAlbums;
 ---
 
 <MainGridLayout title={title} description={description}>
