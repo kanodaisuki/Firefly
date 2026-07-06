@@ -5,9 +5,10 @@ interface Props {
 	src: string;
 	albumId: string;
 	alt?: string;
+	thumbSrc?: string | null;
 }
 
-const { src, albumId, alt = "" } = Astro.props;
+const { src, albumId, alt = "", thumbSrc } = Astro.props;
 
 // LQIP 渐变占位
 const lqipProps = getLqipProps(src, undefined, true);
@@ -22,7 +23,7 @@ const lqipProps = getLqipProps(src, undefined, true);
   >
     <div class="lqip-placeholder absolute inset-0 pointer-events-none" style={lqipProps.style} aria-hidden="true"></div>
     <img
-      src={src}
+      src={thumbSrc ?? src}
       alt={alt}
       loading="lazy"
       decoding="async"
