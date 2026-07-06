@@ -72,6 +72,11 @@ const albums = allAlbums.slice(start, end);
 ---
 
 <MainGridLayout title={title} description={description}>
-	<GalleryIndexContent title={title} description={description} albums={albums} />
+	<GalleryIndexContent
+		title={title}
+		description={description}
+		albums={albums}
+		returnTo={`/gallery/${currentPage}/`}
+	/>
 	<GalleryPagination currentPage={currentPage} totalPages={totalPages} />
 </MainGridLayout>

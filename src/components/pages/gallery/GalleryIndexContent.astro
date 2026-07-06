@@ -21,9 +21,10 @@ interface Props {
 	title: string;
 	description: string;
 	albums: GalleryPageAlbum[];
+	returnTo?: string;
 }
 
-const { title, description, albums } = Astro.props;
+const { title, description, albums, returnTo } = Astro.props;
 
 // 收集所有标签用于筛选
 const allTags = [...new Set(albums.flatMap((a) => a.tags || []))].sort();
@@ -129,6 +130,7 @@ const showFilterControls =
 							photoCount={album.photoCount}
 							encrypted={!!album.password}
 							adaptiveAspectRatio={isFlowLayout && adaptiveAspectRatio}
+							returnTo={returnTo}
 						/>
 					))}
 				</div>
