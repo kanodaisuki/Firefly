@@ -36,6 +36,7 @@ const photos = scanAlbumPhotos(albumMeta.id);
 const cover = getAlbumCover(albumMeta, photos);
 const columnWidth = galleryConfig.columnWidth || 240;
 const allPhotos = buildPhotoThumbnailSrc(photos, albumMeta.thumbnail);
+const defaultBackToGallery = url("/gallery/");
 
 // LQIP 渐变占位
 const coverLqipProps = cover
@@ -57,7 +58,8 @@ const coverLqipProps = cover
         <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
         <!-- 返回按钮 -->
         <a
-          href={url("/gallery/")}
+          href={defaultBackToGallery}
+          data-gallery-back-link
           class="absolute top-4 left-4 inline-flex items-center gap-1.5 text-sm text-white/90 hover:text-white bg-black/30 hover:bg-black/50 backdrop-blur-sm px-3 py-1.5 rounded-lg transition-colors"
         >
           <Icon is:inline name="material-symbols:arrow-back" class="text-base" />
@@ -105,7 +107,8 @@ const coverLqipProps = cover
     ) : (
       <div class="card-base px-6 py-4">
         <a
-          href={url("/gallery/")}
+          href={defaultBackToGallery}
+          data-gallery-back-link
           class="inline-flex items-center gap-1 text-sm text-(--primary) hover:underline mb-3"
         >
           <Icon is:inline name="material-symbols:arrow-back" class="text-base" />
@@ -168,3 +171,41 @@ const coverLqipProps = cover
   </div>
 
 </MainGridLayout>
+
+<script slot="head" is:inline define:vars={{ baseUrl: import.meta.env.BASE_URL }}>
+  const isSafeGalleryPath = (path) => {
+    if (!path || !path.startsWith("/") || path.startsWith("//")) return false;
+    if (path === "/gallery" || path === "/gallery/") return true;
+    return /^\/gallery\/\d+\/?$/.test(path);
+  };
+
+  const normalizeGalleryPath = (path) => {
+    if (path === "/gallery") return "/gallery/";
+    if (/^\/gallery\/\d+$/.test(path)) return `${path}/`;
+    return path;
+  };
+
+  const withBase = (path) => {
+    const normalizedBase = baseUrl.endsWith("/") ? baseUrl : `${baseUrl}/`;
+    const normalizedPath = path.startsWith("/") ? path.slice(1) : path;
+    return `${normalizedBase}${normalizedPath}`;
+  };
+
+  const applyGalleryBackLink = () => {
+    const from = new URL(window.location.href).searchParams.get("from")?.trim();
+    if (!from || !isSafeGalleryPath(from)) return;
+
+    const href = withBase(normalizeGalleryPath(from));
+    document
+      .querySelectorAll("[data-gallery-back-link]")
+      .forEach((el) => el.setAttribute("href", href));
+  };
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", applyGalleryBackLink, {
+      once: true,
+    });
+  } else {
+    applyGalleryBackLink();
+  }
+</script>

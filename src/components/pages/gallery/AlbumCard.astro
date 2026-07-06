@@ -14,6 +14,8 @@ interface Props {
 	tags?: string[];
 	photoCount: number;
 	encrypted?: boolean;
+	adaptiveAspectRatio?: boolean;
+  returnTo?: string;
 }
 
 const {
@@ -26,14 +28,20 @@ const {
 	tags,
 	photoCount,
 	encrypted,
+	adaptiveAspectRatio = false,
+  returnTo,
 } = Astro.props;
 
 // LQIP 渐变占位
 const lqipProps = cover ? getLqipProps(cover, undefined, true) : { style: "" };
+const albumPath = `/gallery/${id}/`;
+const detailPath = returnTo
+	? `${albumPath}?from=${encodeURIComponent(returnTo)}`
+	: albumPath;
 ---
 
 <a
-  href={url(`/gallery/${id}/`)}
+  href={url(detailPath)}
   data-tags={tags?.join(",") || ""}
   class="album-card group relative block overflow-hidden rounded-xl transition-all duration-300 hover:shadow-lg hover:scale-[1.02]"
 >
