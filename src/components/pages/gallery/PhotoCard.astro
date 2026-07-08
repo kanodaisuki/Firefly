@@ -21,8 +21,6 @@ const lqipProps = getLqipProps(src, undefined, true);
 
 const imageQuality = getImageQuality();
 const displayBaseSrc = thumbSrc ?? src;
-const displayUseService = shouldUseImageKitForUrl(displayBaseSrc);
-const lightboxUseService = shouldUseImageKitForUrl(src);
 const displaySizes = "(max-width: 768px) 100vw, 50vw";
 const allWidths = getRemoteImageWidths();
 const displayWidths = allWidths.filter((width) => width <= 960);
@@ -31,7 +29,9 @@ const effectiveDisplayWidths =
 const lightboxWidth =
 	allWidths.length > 0 ? allWidths[allWidths.length - 1] : 1600;
 
-const displayImage = displayUseService
+const useService = shouldUseImageKitForUrl(src);
+
+const displayImage = useService
 	? await getImage({
 			src: displayBaseSrc,
 			inferSize: true,
@@ -41,7 +41,7 @@ const displayImage = displayUseService
 		})
 	: null;
 
-const lightboxImage = lightboxUseService
+const lightboxImage = useService
 	? await getImage({
 			src,
 			inferSize: true,
@@ -62,7 +62,7 @@ const lightboxImage = lightboxUseService
     <img
       src={displayImage?.src || displayBaseSrc}
       srcset={displayImage?.srcSet.attribute}
-		sizes={displaySizes}
+      sizes={displaySizes}
       alt={alt}
       loading="lazy"
       decoding="async"

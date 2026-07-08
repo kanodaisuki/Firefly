@@ -4,11 +4,7 @@ import I18nKey from "@/i18n/i18nKey";
 import { i18n } from "@/i18n/translation";
 import { getLqipProps } from "@/utils/lqip-utils";
 import { url } from "@/utils/url-utils";
-import {
-	getImageQuality,
-	getRemoteImageWidths,
-	shouldUseImageKitForUrl,
-} from "@/utils/image-utils";
+import { shouldUseImageKitForUrl } from "@/utils/image-utils";
 
 interface Props {
 	id: string;
@@ -45,19 +41,10 @@ const detailPath = returnTo
 	? `${albumPath}?from=${encodeURIComponent(returnTo)}`
 	: albumPath;
 
-// ImageKit 封面图优化
-const coverUseService = cover ? shouldUseImageKitForUrl(cover) : false;
-const allWidths = getRemoteImageWidths();
-const coverWidth = allWidths.length > 0 ? allWidths[allWidths.length - 1] : 800;
-
-const optimizedCover = coverUseService
-	? await getImage({
-			src: cover,
-			inferSize: true,
-			width: coverWidth,
-			quality: getImageQuality(),
-		})
-	: null;
+const optimizedCover =
+	cover && shouldUseImageKitForUrl(cover)
+		? await getImage({ src: cover, inferSize: true, width: 800 })
+		: null;
 ---
 
 <a

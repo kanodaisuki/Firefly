@@ -12,11 +12,7 @@ import {
 	getAlbumCover,
 	scanAlbumPhotos,
 } from "@/utils/gallery-utils";
-import {
-	getImageQuality,
-	getRemoteImageWidths,
-	shouldUseImageKitForUrl,
-} from "@/utils/image-utils";
+import { shouldUseImageKitForUrl } from "@/utils/image-utils";
 import { getLqipProps } from "@/utils/lqip-utils";
 import { url } from "@/utils/url-utils";
 
@@ -49,20 +45,10 @@ const coverLqipProps = cover
 	? getLqipProps(cover, undefined, true)
 	: { style: "" };
 
-// ImageKit 封面图优化
-const coverUseService = cover ? shouldUseImageKitForUrl(cover) : false;
-const allWidths = getRemoteImageWidths();
-const coverWidth =
-	allWidths.length > 0 ? allWidths[allWidths.length - 1] : 1600;
-
-const optimizedCover = coverUseService
-	? await getImage({
-			src: cover,
-			inferSize: true,
-			width: coverWidth,
-			quality: getImageQuality(),
-		})
-	: null;
+const optimizedCover =
+	cover && shouldUseImageKitForUrl(cover)
+		? await getImage({ src: cover, inferSize: true, width: 1600 })
+		: null;
 ---
 
 <MainGridLayout title={albumMeta.name} description={albumMeta.description || ""}>

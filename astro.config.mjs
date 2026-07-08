@@ -35,6 +35,7 @@ import rehypeExternalLinks from "./src/plugins/rehype-external-links.mjs";
 import rehypeFigure from "./src/plugins/rehype-figure.mjs";
 import { rehypeMermaid } from "./src/plugins/rehype-mermaid.mjs";
 import { rehypePlantuml } from "./src/plugins/rehype-plantuml.mjs";
+import rehypeImageKit from "./src/plugins/rehype-imagekit.mjs";
 import { parseDirectiveNode } from "./src/plugins/remark-directive-rehype.js";
 import { remarkExcerpt } from "./src/plugins/remark-excerpt.js";
 import { remarkImageGrid } from "./src/plugins/remark-image-grid.js";
@@ -262,6 +263,16 @@ export default defineConfig({
 				rehypeSlug,
 				rehypeMermaid,
 				rehypePlantuml,
+				[
+					rehypeImageKit,
+					{
+						domains: siteConfig.imageOptimization?.imagekit?.domains || [],
+						quality: siteConfig.imageOptimization?.quality ?? 80,
+						fit: siteConfig.imageOptimization?.imagekit?.fit || "at_max",
+						pathPrefix: siteConfig.imageOptimization?.imagekit?.pathPrefix,
+						widths: siteConfig.imageOptimization?.imagekit?.widths,
+					},
+				],
 				rehypeFigure,
 				[rehypeExternalLinks, { siteUrl: siteConfig.site_url }],
 				[rehypeEmailProtection, { method: "base64" }], // 邮箱保护插件，支持 'base64' 或 'rot13'
