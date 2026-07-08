@@ -1,5 +1,5 @@
 ---
-import { Image, Picture } from "astro:assets";
+import { getImage, Image, Picture } from "astro:assets";
 import * as path from "node:path";
 import type { ImageMetadata } from "astro";
 import type { ImageFormat, ResponsiveImageLayout } from "@/types/config";
@@ -7,6 +7,9 @@ import {
 	getFallbackFormat,
 	getImageFormats,
 	getImageQuality,
+	getRemoteImageSizes,
+	getRemoteImageWidths,
+	shouldUseImageKitForUrl,
 	shouldAddNoReferrer,
 } from "@/utils/image-utils";
 import { getLqipProps } from "@/utils/lqip-utils";
@@ -89,6 +92,41 @@ const fullSrc = isPublic ? url(src) : src;
 const referrerPolicy =
 	!isLocal && shouldAddNoReferrer(fullSrc) ? "no-referrer" : undefined;
 
+const remoteSrc = isPublic ? url(src) : src;
+const remoteWidths = widths && widths.length > 0 ? widths : getRemoteImageWidths();
+const remoteSizes = sizes || getRemoteImageSizes(layout);
+const remoteUseService = !isLocal && shouldUseImageKitForUrl(remoteSrc);
+
+let remoteDefaultImage: Awaited<ReturnType<typeof getImage>> | null = null;
+let remoteAvifImage: Awaited<ReturnType<typeof getImage>> | null = null;
+let remoteWebpImage: Awaited<ReturnType<typeof getImage>> | null = null;
+
+if (remoteUseService) {
+	const baseRemoteOptions = {
+		src: remoteSrc,
+		inferSize: true,
+		widths: remoteWidths,
+		sizes: remoteSizes,
+		quality,
+	};
+
+	remoteDefaultImage = await getImage(baseRemoteOptions);
+
+	if (formats.includes("avif")) {
+		remoteAvifImage = await getImage({
+			...baseRemoteOptions,
+			format: "avif",
+		});
+	}
+
+	if (formats.includes("webp")) {
+		remoteWebpImage = await getImage({
+			...baseRemoteOptions,
+			format: "webp",
+		});
+	}
+}
+
 // 构建响应式图像属性
 const responsiveProps = {
 	...(layout && { layout }),
@@ -131,5 +169,49 @@ const lqipProps = isLocal
             {...responsiveProps}
         />
     )}
-    {!isLocal && <img src={isPublic ? url(src) : src} alt={alt || ""} class={imageClass} style={imageStyle} loading={loading} fetchpriority={fetchpriority} referrerpolicy={referrerPolicy} />}
+	{!isLocal && remoteUseService && usePicture && remoteDefaultImage && (
+		<picture>
+			{remoteAvifImage?.srcSet.attribute && (
+				<source type="image/avif" srcset={remoteAvifImage.srcSet.attribute} sizes={remoteSizes} />
+			)}
+			{remoteWebpImage?.srcSet.attribute && (
+				<source type="image/webp" srcset={remoteWebpImage.srcSet.attribute} sizes={remoteSizes} />
+			)}
+			<img
+				src={remoteDefaultImage.src}
+				srcset={remoteDefaultImage.srcSet.attribute}
+				sizes={remoteSizes}
+				alt={alt || ""}
+				class={imageClass}
+				style={imageStyle}
+				loading={loading}
+				fetchpriority={fetchpriority}
+				referrerpolicy={referrerPolicy}
+			/>
+		</picture>
+	)}
+	{!isLocal && remoteUseService && !usePicture && remoteDefaultImage && (
+		<img
+			src={remoteDefaultImage.src}
+			srcset={remoteDefaultImage.srcSet.attribute}
+			sizes={remoteSizes}
+			alt={alt || ""}
+			class={imageClass}
+			style={imageStyle}
+			loading={loading}
+			fetchpriority={fetchpriority}
+			referrerpolicy={referrerPolicy}
+		/>
+	)}
+	{!isLocal && !remoteUseService && (
+		<img
+			src={remoteSrc}
+			alt={alt || ""}
+			class={imageClass}
+			style={imageStyle}
+			loading={loading}
+			fetchpriority={fetchpriority}
+			referrerpolicy={referrerPolicy}
+		/>
+	)}
 </div>

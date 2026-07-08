@@ -172,5 +172,55 @@ export type SiteConfig = {
 		 * 仅影响匹配域名的图片标签，不影响其他链接的 referrer 行为
 		 */
 		noReferrerDomains?: string[];
+		/**
+		 * ImageKit 远程图像优化配置（组件层）
+		 * 通过 URL 路径中的 tr: 参数生成响应式图片
+		 */
+		imagekit?: {
+			enabled?: boolean;
+			/**
+			 * 允许进行 ImageKit 转换的域名（支持通配符 *）
+			 * 示例： ["pic.kanochan.net"]
+			 */
+			domains?: string[];
+			/**
+			 * ImageKit URL 中的路径前缀
+			 * 例如 URL 为 https://pic.kanochan.net/kanochan/... 时可设为 "kanochan"
+			 * 可设为空字符串 ""，此时转换参数会放在域名后（/tr:.../path）
+			 */
+			pathPrefix?: string;
+			/**
+			 * 默认响应式宽度集合（用于生成 srcset）
+			 */
+			widths?: number[];
+			/**
+			 * 远程图片默认 sizes
+			 */
+			sizes?: string;
+			/**
+			 * ImageKit 裁剪模式，默认 c-at_max
+			 */
+			fit?: "at_max" | "maintain_ratio" | "pad_resize" | "force";
+			/**
+			 * 启用AVIF转换？
+			 * AVIF是ImageKit的付费功能，免费账户无法使用
+			 */
+			enableAvif?: boolean;
+			/**
+			 * 远程图片兜底宽度（用于避免 inferSize 远程探测失败）
+			 */
+			defaultWidth?: number;
+			/**
+			 * 远程图片兜底高度（用于避免 inferSize 远程探测失败）
+			 */
+			defaultHeight?: number;
+			/**
+			 * 宽度到转换参数模板的映射
+			 * key 为宽度（需与 widths 对应），value 为 tr: 后的参数串
+			 * 支持占位符：{width} {height} {quality} {fit} {format}
+			 * 也支持 default 作为兜底模板
+			 */
+			transformsByWidth?: Record<string, string>;
+		};
 	};
 };

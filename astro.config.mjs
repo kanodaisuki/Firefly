@@ -88,6 +88,22 @@ export default defineConfig({
 	image: {
 		// 全局响应式布局
 		layout: "constrained",
+		service: {
+			entrypoint: "./src/services/imagekit-image-service.ts",
+			config: {
+				enabled: siteConfig.imageOptimization?.imagekit?.enabled ?? false,
+				domains: siteConfig.imageOptimization?.imagekit?.domains || [],
+				pathPrefix: siteConfig.imageOptimization?.imagekit?.pathPrefix,
+				fit: siteConfig.imageOptimization?.imagekit?.fit || "at_max",
+				quality: siteConfig.imageOptimization?.quality ?? 80,
+				enableAvif: siteConfig.imageOptimization?.imagekit?.enableAvif === true,
+				defaultWidth: siteConfig.imageOptimization?.imagekit?.defaultWidth,
+				defaultHeight: siteConfig.imageOptimization?.imagekit?.defaultHeight,
+				transformsByWidth:
+					siteConfig.imageOptimization?.imagekit?.transformsByWidth || {},
+			},
+		},
+		domains: ['pic.kanochan.net'],
 	},
 
 	integrations: [

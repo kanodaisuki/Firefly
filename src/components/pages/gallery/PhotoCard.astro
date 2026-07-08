@@ -1,5 +1,11 @@
 ---
+import { getImage } from "astro:assets";
 import { getLqipProps } from "@/utils/lqip-utils";
+import {
+  getImageQuality,
+  getRemoteImageWidths,
+  shouldUseImageKitForUrl,
+} from "@/utils/image-utils";
 
 interface Props {
 	src: string;
@@ -12,18 +18,50 @@ const { src, albumId, alt = "", thumbSrc } = Astro.props;
 
 // LQIP 渐变占位
 const lqipProps = getLqipProps(src, undefined, true);
+
+const imageQuality = getImageQuality();
+const displayBaseSrc = thumbSrc ?? src;
+const displayUseService = shouldUseImageKitForUrl(displayBaseSrc);
+const lightboxUseService = shouldUseImageKitForUrl(src);
+const displaySizes = "(max-width: 768px) 100vw, 50vw";
+const allWidths = getRemoteImageWidths();
+const displayWidths = allWidths.filter((width) => width <= 960);
+const effectiveDisplayWidths =
+  displayWidths.length > 0 ? displayWidths : allWidths;
+const lightboxWidth = allWidths.length > 0 ? allWidths[allWidths.length - 1] : 1600;
+
+const displayImage = displayUseService
+  ? await getImage({
+      src: displayBaseSrc,
+      inferSize: true,
+      widths: effectiveDisplayWidths,
+      sizes: displaySizes,
+      quality: imageQuality,
+    })
+  : null;
+
+const lightboxImage = lightboxUseService
+  ? await getImage({
+      src,
+      inferSize: true,
+      width: lightboxWidth,
+      quality: imageQuality,
+    })
+  : null;
 ---
 
 <div class="gallery-photo-card break-inside-avoid mb-3">
   <div
     data-fancybox={`gallery-${albumId}`}
-    data-src={src}
+    data-src={lightboxImage?.src || src}
     data-type="image"
     class="block rounded-xl overflow-hidden relative group cursor-pointer"
   >
     <div class="lqip-placeholder absolute inset-0 pointer-events-none" style={lqipProps.style} aria-hidden="true"></div>
     <img
-      src={thumbSrc ?? src}
+      src={displayImage?.src || displayBaseSrc}
+      srcset={displayImage?.srcSet.attribute}
+		sizes={displaySizes}
       alt={alt}
       loading="lazy"
       decoding="async"

@@ -1,6 +1,13 @@
 import { h } from "hastscript";
 import { visit } from "unist-util-visit";
-import { shouldAddNoReferrer } from "../utils/image-utils.ts";
+import {
+	buildImageKitSrcSet,
+	buildImageKitUrl,
+	getRemoteImageSizes,
+	getRemoteImageWidths,
+	shouldAddNoReferrer,
+	shouldUseImageKitForUrl,
+} from "../utils/image-utils.ts";
 
 /**
  * 将带有 alt 文本的图片转换为包含 figcaption 的 figure 元素的 rehype 插件
@@ -27,6 +34,15 @@ export default function rehypeFigure() {
 			}
 
 			const imgProps = { ...node.properties };
+			const src = typeof imgProps.src === "string" ? imgProps.src : "";
+
+			if (src && shouldUseImageKitForUrl(src)) {
+				const widths = getRemoteImageWidths();
+				const fallbackWidth = widths[Math.floor(widths.length / 2)] || 960;
+				imgProps.src = buildImageKitUrl(src, { width: fallbackWidth });
+				imgProps.srcset = buildImageKitSrcSet(src, widths);
+				imgProps.sizes = getRemoteImageSizes();
+			}
 
 			// 添加 referrerpolicy（如果需要）解决 403 问题
 			// 无论是否有 alt，都要检查并添加 referrerpolicy

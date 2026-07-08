@@ -216,6 +216,33 @@ export const siteConfig: SiteConfig = {
 		// 支持通配符 *，例如：["i0.hdslb.com", "*.bilibili.com"]
 		// 可解决指定域名图片加载时的 403 问题（如防盗链图片）
 		noReferrerDomains: ["*.hdslb.com", "*.bilibili.com"],
+		// ImageKit 远程图片响应式优化配置
+		imagekit: {
+			enabled: true,
+			domains: ["pic.kanochan.net"],
+			pathPrefix: "",
+			widths: [320, 480, 640, 800, 960, 1280, 1600, 2160, 3000],
+			// 宽度到转换参数模板映射（可选）
+			// key: 宽度，value: tr: 后参数串；支持占位符 {width} {height} {quality} {fit} {format}
+			// default 为未命中宽度时的兜底模板
+			transformsByWidth: {
+				default: "q-{quality},c-{fit},w-{width},h-{height},f-{format}",
+				"320": "tr:w-320,h-320,c-at_max",
+				"480": "tr:w-480,h-480,c-at_max",
+				"640": "tr:w-640,h-640,c-at_max",
+				"800": "tr:w-800,h-800,c-at_max",
+				"960": "tr:w-960,h-960,c-at_max",
+				"1280": "tr:w-1280,h-1280,c-at_max",
+				"1600": "tr:w-1600,h-1600,c-at_max",
+				"2160": "tr:w-2160,h-2160,c-at_max",
+				"3000": "tr:w-3000,h-3000,c-at_max",
+			},
+			sizes: "(max-width: 768px) 100vw, (max-width: 1200px) 90vw, 1200px",
+			fit: "at_max",
+			enableAvif: false,
+			defaultWidth: 1600,
+			defaultHeight: 900,
+		},
 	},
 
 	// 站点语言，在本配置文件顶部SITE_LANG定义
