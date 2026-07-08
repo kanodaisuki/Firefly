@@ -2,9 +2,9 @@
 import { getImage } from "astro:assets";
 import { getLqipProps } from "@/utils/lqip-utils";
 import {
-  getImageQuality,
-  getRemoteImageWidths,
-  shouldUseImageKitForUrl,
+	getImageQuality,
+	getRemoteImageWidths,
+	shouldUseImageKitForUrl,
 } from "@/utils/image-utils";
 
 interface Props {
@@ -27,27 +27,28 @@ const displaySizes = "(max-width: 768px) 100vw, 50vw";
 const allWidths = getRemoteImageWidths();
 const displayWidths = allWidths.filter((width) => width <= 960);
 const effectiveDisplayWidths =
-  displayWidths.length > 0 ? displayWidths : allWidths;
-const lightboxWidth = allWidths.length > 0 ? allWidths[allWidths.length - 1] : 1600;
+	displayWidths.length > 0 ? displayWidths : allWidths;
+const lightboxWidth =
+	allWidths.length > 0 ? allWidths[allWidths.length - 1] : 1600;
 
 const displayImage = displayUseService
-  ? await getImage({
-      src: displayBaseSrc,
-      inferSize: true,
-      widths: effectiveDisplayWidths,
-      sizes: displaySizes,
-      quality: imageQuality,
-    })
-  : null;
+	? await getImage({
+			src: displayBaseSrc,
+			inferSize: true,
+			widths: effectiveDisplayWidths,
+			sizes: displaySizes,
+			quality: imageQuality,
+		})
+	: null;
 
 const lightboxImage = lightboxUseService
-  ? await getImage({
-      src,
-      inferSize: true,
-      width: lightboxWidth,
-      quality: imageQuality,
-    })
-  : null;
+	? await getImage({
+			src,
+			inferSize: true,
+			width: lightboxWidth,
+			quality: imageQuality,
+		})
+	: null;
 ---
 
 <div class="gallery-photo-card break-inside-avoid mb-3">

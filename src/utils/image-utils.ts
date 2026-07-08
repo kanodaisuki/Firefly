@@ -158,9 +158,15 @@ function findImageKitTransformIndex(segments: string[]): number {
 	return segments.findIndex((segment) => segment.startsWith("tr:"));
 }
 
-function findInsertIndexByPathPrefix(segments: string[], pathPrefix?: string): number {
+function findInsertIndexByPathPrefix(
+	segments: string[],
+	pathPrefix?: string,
+): number {
 	if (!pathPrefix) return 0;
-	const normalizedPrefix = sanitizeImageKitValue(pathPrefix).replace(/^\/+|\/+$/g, "");
+	const normalizedPrefix = sanitizeImageKitValue(pathPrefix).replace(
+		/^\/+|\/+$/g,
+		"",
+	);
 	if (!normalizedPrefix) return 0;
 
 	const prefixSegments = normalizedPrefix.split("/").filter(Boolean);
@@ -191,7 +197,9 @@ export function shouldUseImageKitForUrl(urlStr: string): boolean {
 		const hostname = new URL(urlStr).hostname;
 		const domains = imagekit.domains || [];
 		if (domains.length === 0) return true;
-		return domains.some((pattern) => matchDomainWithWildcard(hostname, pattern));
+		return domains.some((pattern) =>
+			matchDomainWithWildcard(hostname, pattern),
+		);
 	} catch {
 		return false;
 	}
@@ -209,7 +217,11 @@ export function isImageKitAvifEnabled(): boolean {
  * 获取远程图片默认响应式宽度列表
  */
 export function getRemoteImageWidths(): number[] {
-	return siteConfig.imageOptimization?.imagekit?.widths || [320, 480, 640, 800, 960, 1280, 1600];
+	return (
+		siteConfig.imageOptimization?.imagekit?.widths || [
+			320, 480, 640, 800, 960, 1280, 1600,
+		]
+	);
 }
 
 /**
@@ -245,7 +257,10 @@ export function buildImageKitUrl(
 	}
 
 	const imagekit = siteConfig.imageOptimization?.imagekit;
-	const quality = Math.max(1, Math.min(100, options.quality ?? getImageQuality()));
+	const quality = Math.max(
+		1,
+		Math.min(100, options.quality ?? getImageQuality()),
+	);
 	const fit = options.fit || imagekit?.fit || "at_max";
 
 	try {
@@ -272,7 +287,10 @@ export function buildImageKitUrl(
 		if (transformIndex >= 0) {
 			pathSegments[transformIndex] = transformSegment;
 		} else {
-			const insertIndex = findInsertIndexByPathPrefix(pathSegments, imagekit?.pathPrefix);
+			const insertIndex = findInsertIndexByPathPrefix(
+				pathSegments,
+				imagekit?.pathPrefix,
+			);
 			pathSegments.splice(insertIndex, 0, transformSegment);
 		}
 
@@ -316,7 +334,8 @@ export function buildImageKitSrcSet(
 }
 
 function normalizeWidths(widths?: number[]): number[] {
-	const sourceWidths = widths && widths.length > 0 ? widths : getRemoteImageWidths();
+	const sourceWidths =
+		widths && widths.length > 0 ? widths : getRemoteImageWidths();
 	return sourceWidths
 		.map((width) => Math.round(width))
 		.filter((width) => Number.isFinite(width) && width > 0)
@@ -365,7 +384,9 @@ export function buildRemoteResponsiveImage(
 			? buildImageKitSrcSet(urlStr, effectiveWidths, { quality, fit })
 			: undefined;
 	const avifSrcSet =
-		isImageKitAvifEnabled() && formats.includes("avif") && effectiveWidths.length > 0
+		isImageKitAvifEnabled() &&
+		formats.includes("avif") &&
+		effectiveWidths.length > 0
 			? buildImageKitSrcSet(urlStr, effectiveWidths, {
 					format: "avif",
 					quality,

@@ -93,7 +93,8 @@ const referrerPolicy =
 	!isLocal && shouldAddNoReferrer(fullSrc) ? "no-referrer" : undefined;
 
 const remoteSrc = isPublic ? url(src) : src;
-const remoteWidths = widths && widths.length > 0 ? widths : getRemoteImageWidths();
+const remoteWidths =
+	widths && widths.length > 0 ? widths : getRemoteImageWidths();
 const remoteSizes = sizes || getRemoteImageSizes(layout);
 const remoteUseService = !isLocal && shouldUseImageKitForUrl(remoteSrc);
 

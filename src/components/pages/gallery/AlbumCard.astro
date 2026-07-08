@@ -1,8 +1,14 @@
 ---
+import { getImage } from "astro:assets";
 import I18nKey from "@/i18n/i18nKey";
 import { i18n } from "@/i18n/translation";
 import { getLqipProps } from "@/utils/lqip-utils";
 import { url } from "@/utils/url-utils";
+import {
+	getImageQuality,
+	getRemoteImageWidths,
+	shouldUseImageKitForUrl,
+} from "@/utils/image-utils";
 
 interface Props {
 	id: string;
@@ -15,7 +21,7 @@ interface Props {
 	photoCount: number;
 	encrypted?: boolean;
 	adaptiveAspectRatio?: boolean;
-  returnTo?: string;
+	returnTo?: string;
 }
 
 const {
@@ -29,7 +35,7 @@ const {
 	photoCount,
 	encrypted,
 	adaptiveAspectRatio = false,
-  returnTo,
+	returnTo,
 } = Astro.props;
 
 // LQIP 渐变占位
@@ -38,6 +44,20 @@ const albumPath = `/gallery/${id}/`;
 const detailPath = returnTo
 	? `${albumPath}?from=${encodeURIComponent(returnTo)}`
 	: albumPath;
+
+// ImageKit 封面图优化
+const coverUseService = cover ? shouldUseImageKitForUrl(cover) : false;
+const allWidths = getRemoteImageWidths();
+const coverWidth = allWidths.length > 0 ? allWidths[allWidths.length - 1] : 800;
+
+const optimizedCover = coverUseService
+	? await getImage({
+			src: cover,
+			inferSize: true,
+			width: coverWidth,
+			quality: getImageQuality(),
+		})
+	: null;
 ---
 
 <a
@@ -51,7 +71,8 @@ const detailPath = returnTo
       <>
         <div class="lqip-placeholder absolute inset-0 pointer-events-none" style={lqipProps.style} aria-hidden="true"></div>
         <img
-          src={cover}
+          src={optimizedCover?.src || cover}
+          srcset={optimizedCover?.srcSet.attribute}
           alt={name}
           class="w-full h-full object-cover pointer-events-none opacity-0 transition-all duration-500 ease-out group-hover:scale-105"
           loading="lazy"

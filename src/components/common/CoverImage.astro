@@ -140,7 +140,8 @@ const remoteReferrerPolicy =
 		: undefined;
 
 const remoteSrc = isPublic ? url(src) : src;
-const remoteWidths = widths && widths.length > 0 ? widths : getRemoteImageWidths();
+const remoteWidths =
+	widths && widths.length > 0 ? widths : getRemoteImageWidths();
 const remoteUseService = !isLocal && shouldUseImageKitForUrl(remoteSrc);
 
 let remoteDefaultImage: Awaited<ReturnType<typeof getImage>> | null = null;
