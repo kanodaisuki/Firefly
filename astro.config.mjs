@@ -104,7 +104,7 @@ export default defineConfig({
 					siteConfig.imageOptimization?.imagekit?.transformsByWidth || {},
 			},
 		},
-		domains: ['pic.kanochan.net'],
+		domains: ['p.kksk.ltd'],
 	},
 
 	integrations: [

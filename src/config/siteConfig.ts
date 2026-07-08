@@ -219,7 +219,7 @@ export const siteConfig: SiteConfig = {
 		// ImageKit 远程图片响应式优化配置
 		imagekit: {
 			enabled: true,
-			domains: ["pic.kanochan.net"],
+			domains: ["p.kksk.ltd"],
 			pathPrefix: "",
 			widths: [320, 480, 640, 800, 960, 1280, 1600, 2160, 3000],
 			// 宽度到转换参数模板映射（可选）
