@@ -58,30 +58,33 @@ export default function rehypeFigure() {
 			// 获取 alt 属性
 			const alt = imgProps.alt;
 
-			// 如果没有 alt 属性或 alt 为空字符串，则只更新属性并保持原样
-			if (!alt || alt.trim() === "") {
-				node.properties = imgProps;
-				return;
-			}
+			// 提取 lightGallery 属性到外层 wrapper div，img 自身不再携带 data-src/data-thumb
+			// 若无 ImageKit 高分辨率版本，则回退到当前 src
+			const lgSrc = imgProps["data-src"] || src;
+			const lgThumb = imgProps["data-thumb"] || imgProps.src || src;
+			delete imgProps["data-src"];
+			delete imgProps["data-thumb"];
 
-			// 创建 figure 元素，包含处理后的 img 和居中的 figcaption
-			// lightGallery 属性放在 figure 上，避免 lightGallery 对 <img> 忽略 data-src
-			const figure = h("figure", {
-				"data-src": imgProps["data-src"],
-				"data-thumb": imgProps["data-thumb"],
+			// 构建包裹 <img> 的 div，data-src/data-thumb 放在此 div 上（与相册 PhotoCard 一致）
+			const wrapperDiv = h("div", {
+				"data-src": lgSrc,
+				"data-thumb": lgThumb,
 			}, [
-				h("img", {
-					...imgProps,
-				}),
-				h("figcaption", alt),
+				h("img", { ...imgProps }),
 			]);
 
-			// 居中显示
-			const centerFigure = h("center", figure);
-
-			// 替换当前的 img 节点为 figure 节点
 			if (parent && typeof index === "number") {
-				parent.children[index] = centerFigure;
+				if (alt && alt.trim() !== "") {
+					// 有 alt：包裹在 figure > div + figcaption 中，居中显示
+					const figure = h("figure", {}, [
+						wrapperDiv,
+						h("figcaption", alt),
+					]);
+					parent.children[index] = h("center", figure);
+				} else {
+					// 无 alt：直接用 wrapper div 替换 img
+					parent.children[index] = wrapperDiv;
+				}
 			}
 		});
 	};

@@ -311,19 +311,7 @@ export default defineConfig({
 		}),
 	},
 	vite: {
-		plugins: [
-			tailwindcss(),
-			{
-				name: "watch-plugins-reload",
-				configureServer(server) {
-					server.watcher.on("change", (path) => {
-						if (path.includes("src/plugins/")) {
-							server.ws.send({ type: "full-reload" });
-						}
-					});
-				},
-			},
-		],
+		plugins: [tailwindcss()],
 		server: {
 			watch: {
 				ignored: ["**/package/**", "**/Firefly-docs/**"],

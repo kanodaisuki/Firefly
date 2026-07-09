@@ -34,118 +34,6 @@ import "lightgallery/css/lightgallery-bundle.min.css";
   // 封面 & 动态图片
   const MISC_IMG_SELECTOR = "#post-cover, .moment-images";
 
-  // SVG blob URL 缓存
-  const svgBlobUrlCache = new Map<string, string>();
-
-  /** 判断 URL 是否指向 SVG 图片 */
-  function isSvgSrc(src: string): boolean {
-    if (!src) return false;
-    try {
-      const url = new URL(src, location.href);
-      if (url.pathname.toLowerCase().endsWith(".svg")) return true;
-      if (url.searchParams.get("f")?.toLowerCase() === "svg") return true;
-    } catch { return false; }
-    return false;
-  }
-
-  /** 释放所有 SVG blob URL */
-  function revokeAllSvgBlobUrls(): void {
-    for (const url of svgBlobUrlCache.values()) URL.revokeObjectURL(url);
-    svgBlobUrlCache.clear();
-  }
-
-  /** 获取 SVG 图片的 blob URL，用于解决 lightGallery 中的 SVG 渲染问题 */
-  async function getSvgBlobUrl(
-    src: string,
-    fallbackW: number,
-    fallbackH: number,
-  ): Promise<string | null> {
-    const cached = svgBlobUrlCache.get(src);
-    if (cached) return cached;
-    try {
-      const resp = await fetch(src);
-      if (!resp.ok) {
-        console.debug("[LightGallery] SVG fetch failed:", resp.status, src);
-        return null;
-      }
-      const svgText = await resp.text();
-      const parser = new DOMParser();
-      const doc = parser.parseFromString(svgText, "image/svg+xml");
-      if (doc.querySelector("parsererror")) {
-        console.debug("[LightGallery] SVG parse error:", src);
-        return null;
-      }
-      const svgEl = doc.querySelector("svg");
-      if (!svgEl) {
-        console.debug("[LightGallery] No <svg> element:", src);
-        return null;
-      }
-      if (!svgEl.getAttribute("width") || !svgEl.getAttribute("height")) {
-        const vb = svgEl.getAttribute("viewBox");
-        let w = String(fallbackW);
-        let h = String(fallbackH);
-        if (vb) {
-          const parts = vb.split(/[\s,]+/);
-          if (parts.length >= 4 && Number(parts[2]) > 0 && Number(parts[3]) > 0) {
-            w = parts[2];
-            h = parts[3];
-          }
-        }
-        if (!svgEl.getAttribute("width")) svgEl.setAttribute("width", w);
-        if (!svgEl.getAttribute("height")) svgEl.setAttribute("height", h);
-      }
-      const blob = new Blob([new XMLSerializer().serializeToString(svgEl)], {
-        type: "image/svg+xml",
-      });
-      const blobUrl = URL.createObjectURL(blob);
-      svgBlobUrlCache.set(src, blobUrl);
-      return blobUrl;
-    } catch (err) {
-      console.debug("[LightGallery] SVG preprocess error:", src, err);
-      return null;
-    }
-  }
-
-  /** 预处理页面中所有 SVG 图片，将其转为 blob URL */
-  async function preprocessSvgImages(): Promise<void> {
-    const promises: Promise<void>[] = [];
-
-    document.querySelectorAll<HTMLImageElement>("img").forEach((img) => {
-      if (img.dataset.svgFixed) return;
-      const src = img.getAttribute("src") || "";
-      if (!isSvgSrc(src)) return;
-      const fallbackW = img.naturalWidth || img.clientWidth || 1600;
-      const fallbackH = img.naturalHeight || img.clientHeight || 900;
-      promises.push(
-        getSvgBlobUrl(src, fallbackW, fallbackH).then((blobUrl) => {
-          if (blobUrl) {
-            img.dataset.originalSrc = src;
-            img.src = blobUrl;
-            img.dataset.svgFixed = "true";
-          }
-        }),
-      );
-    });
-
-    // 处理 data-src 元素中的 SVG
-    document.querySelectorAll<HTMLElement>("[data-src]").forEach((el) => {
-      if (el.dataset.svgFixed) return;
-      const svgSrc = el.getAttribute("data-src") || "";
-      if (!isSvgSrc(svgSrc)) return;
-      promises.push(
-        getSvgBlobUrl(svgSrc, 1600, 900).then((blobUrl) => {
-          if (blobUrl) {
-            el.dataset.originalSrc = svgSrc;
-            el.setAttribute("data-src", blobUrl);
-            el.dataset.svgFixed = "true";
-          }
-        }),
-      );
-    });
-
-    await Promise.allSettled(promises);
-  }
-
   /** 获取已加载的插件列表 */
   function getCommonPlugins(): LgPluginConstructor[] {
     if (!lg) return [];
@@ -160,9 +48,9 @@ import "lightgallery/css/lightgallery-bundle.min.css";
 
   /** 通用 lightGallery 设置 */
   function getCommonSettings(): LightGallerySettings {
+    const isDark = document.documentElement.classList.contains("dark");
     return {
       speed: 500,
-      licenseKey: "0000-0000-000-0000",
       download: false,
       hideScrollbar: false,
       resetScrollPosition: true,
@@ -177,7 +65,24 @@ import "lightgallery/css/lightgallery-bundle.min.css";
       mousewheel: true,
       swipeThreshold: 50,
       hash: true,
+      infiniteZoom: true,
+      backgroundColor: isDark ? "#0d0d0d" : "#f5f5f5",
     };
+  }
+
+  /** 根据当前主题更新所有已创建灯箱实例的背景色 */
+  function updateBackdropColors(): void {
+    const isDark = document.documentElement.classList.contains("dark");
+    const color = isDark ? "#0d0d0d" : "#f5f5f5";
+    for (const inst of instances) {
+      try {
+        if (inst.$backdrop) {
+          inst.$backdrop.css("background-color", color);
+        }
+      } catch {
+        /* 实例可能已销毁 */
+      }
+    }
   }
 
   /** 销毁所有 lightGallery 实例 */
@@ -217,36 +122,21 @@ import "lightgallery/css/lightgallery-bundle.min.css";
       lg.lgMediumZoom = mediumZoomMod.default as LgPluginConstructor;
     }
 
-    await preprocessSvgImages();
-
     const commonPlugins = getCommonPlugins();
     const commonSettings = getCommonSettings();
 
-    // 1. 文章内容图片 - .custom-md 中每个 <figure> 或 <img> 独立为一个画廊
+    // 1. 文章内容图片 - 每个 [data-src] 元素作为一个灯箱项（与相册实现一致）
     document.querySelectorAll(POST_IMG_SELECTOR).forEach((el) => {
-      const hasImages =
-        el.querySelectorAll("figure[data-src], img").length > 0;
-      if (!hasImages) return;
-
-      // <figure data-src>：lightGallery 自动读 data-src，无需处理
-      // <img>：把 data-src 临时换到 src 上，初始化后恢复
-      const swaps: Array<{ img: HTMLImageElement; original: string }> = [];
-      el.querySelectorAll<HTMLImageElement>("img[data-src]").forEach((img) => {
-        swaps.push({ img, original: img.src });
-        img.src = img.getAttribute("data-src")!;
-      });
+      const items = el.querySelectorAll("[data-src]");
+      if (items.length === 0) return;
 
       const instance = lg!(el as HTMLElement, {
         ...commonSettings,
         plugins: commonPlugins,
-        selector: "figure[data-src], img",
+        selector: "[data-src]",
         exThumbImage: "data-thumb",
       });
       instances.push(instance);
-
-      for (const { img, original } of swaps) {
-        img.src = original;
-      }
     });
 
     // 2. 相册页面 - 每个 .gallery-masonry 容器独立为一个画廊
@@ -282,27 +172,10 @@ import "lightgallery/css/lightgallery-bundle.min.css";
         plugins: miscPlugins,
         selector: "img",
         mediumZoom: true,
-        margin: 40,
+        margin: 80,
       });
       instances.push(instance);
     });
-  }
-
-  /** 清理：销毁实例 + 恢复 SVG 原始 URL + 释放 blob */
-  function cleanupAndRestore(): void {
-    destroyAll();
-    document.querySelectorAll<HTMLElement>("[data-svg-fixed]").forEach((el) => {
-      const original = el.dataset.originalSrc;
-      if (!original) return;
-      if (el instanceof HTMLImageElement) {
-        el.src = original;
-      } else if (el.hasAttribute("data-src")) {
-        el.setAttribute("data-src", original);
-      }
-      delete el.dataset.svgFixed;
-      delete el.dataset.originalSrc;
-    });
-    revokeAllSvgBlobUrls();
   }
 
   // 初始化
@@ -310,7 +183,16 @@ import "lightgallery/css/lightgallery-bundle.min.css";
 
   // Swup 生命周期整合
   document.addEventListener("swup:content:replace", setup);
-  document.addEventListener("swup:visit:start", cleanupAndRestore);
+  document.addEventListener("swup:visit:start", destroyAll);
+
+  // 监听主题切换（dark 类变化），实时更新灯箱背景色
+  const themeObserver = new MutationObserver(() => {
+    updateBackdropColors();
+  });
+  themeObserver.observe(document.documentElement, {
+    attributes: true,
+    attributeFilter: ["class"],
+  });
 
   // 加密文章解密后重新绑定
   document.addEventListener("password:decrypted", () => {
