@@ -221,7 +221,7 @@ export const siteConfig: SiteConfig = {
 			enabled: true,
 			domains: ["p.kksk.ltd"],
 			pathPrefix: "",
-			widths: [320, 480, 640, 800, 960, 1280, 1600, 2160, 3000],
+			widths: [320, 480, 640, 800, 1080, 1440, 1920, 2880, 3840],
 			// 宽度到转换参数模板映射（可选）
 			// key: 宽度，value: tr: 后参数串；支持占位符 {width} {height} {quality} {fit} {format}
 			// default 为未命中宽度时的兜底模板
@@ -231,11 +231,11 @@ export const siteConfig: SiteConfig = {
 				"480": "tr:w-480,h-480,c-at_max",
 				"640": "tr:w-640,h-640,c-at_max",
 				"800": "tr:w-800,h-800,c-at_max",
-				"960": "tr:w-960,h-960,c-at_max",
-				"1280": "tr:w-1280,h-1280,c-at_max",
-				"1600": "tr:w-1600,h-1600,c-at_max",
-				"2160": "tr:w-2160,h-2160,c-at_max",
-				"3000": "tr:w-3000,h-3000,c-at_max",
+				"1080": "tr:w-1080,h-1080,c-at_max",
+				"1440": "tr:w-1440,h-1440,c-at_max",
+				"1920": "tr:w-1920,h-1920,c-at_max",
+				"2880": "tr:w-2880,h-2880,c-at_max",
+				"3840": "tr:w-3840,h-3840,c-at_max",
 			},
 			sizes: "(max-width: 768px) 100vw, (max-width: 1200px) 90vw, 1200px",
 			fit: "at_max",
