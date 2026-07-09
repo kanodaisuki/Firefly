@@ -221,12 +221,13 @@ export const siteConfig: SiteConfig = {
 			enabled: true,
 			domains: ["p.kksk.ltd"],
 			pathPrefix: "",
-			widths: [320, 480, 640, 800, 1080, 1440, 1920, 2880, 3840],
+			widths: [100, 320, 480, 640, 800, 1080, 1440, 1920, 2880, 3840],
 			// 宽度到转换参数模板映射（可选）
 			// key: 宽度，value: tr: 后参数串；支持占位符 {width} {height} {quality} {fit} {format}
 			// default 为未命中宽度时的兜底模板
 			transformsByWidth: {
 				default: "q-{quality},c-{fit},w-{width},h-{height},f-{format}",
+				"100": "tr:w-100,h-100,c-at_max", // 缩略图
 				"320": "tr:w-320,h-320,c-at_max",
 				"480": "tr:w-480,h-480,c-at_max",
 				"640": "tr:w-640,h-640,c-at_max",

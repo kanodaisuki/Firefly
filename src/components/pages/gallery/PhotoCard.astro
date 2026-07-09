@@ -29,6 +29,9 @@ const effectiveDisplayWidths =
 const lightboxWidth =
 	allWidths.length > 0 ? allWidths[allWidths.length - 1] : 1600;
 
+// lightGallery 缩略图专用宽度，对应 siteConfig 中 transformsByWidth["100"]
+const LG_THUMB_WIDTH = 100;
+
 const useService = shouldUseImageKitForUrl(src);
 
 const displayImage = useService
@@ -49,13 +52,21 @@ const lightboxImage = useService
 			quality: imageQuality,
 		})
 	: null;
+
+const thumbImage = useService
+	? await getImage({
+			src: displayBaseSrc,
+			inferSize: true,
+			width: LG_THUMB_WIDTH,
+			quality: imageQuality,
+		})
+	: null;
 ---
 
 <div class="gallery-photo-card break-inside-avoid mb-3">
   <div
-    data-fancybox={`gallery-${albumId}`}
     data-src={lightboxImage?.src || src}
-    data-type="image"
+    data-thumb={thumbImage?.src || displayImage?.src || displayBaseSrc}
     class="block rounded-xl overflow-hidden relative group cursor-pointer"
   >
     <div class="lqip-placeholder absolute inset-0 pointer-events-none" style={lqipProps.style} aria-hidden="true"></div>
