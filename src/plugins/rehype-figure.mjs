@@ -46,7 +46,8 @@ export default function rehypeFigure() {
 				const maxW = widths[widths.length - 1];
 				const minW = widths[0];
 				if (maxW) imgProps["data-src"] = buildImageKitUrl(src, { width: maxW });
-				if (minW) imgProps["data-thumb"] = buildImageKitUrl(src, { width: minW });
+				if (minW)
+					imgProps["data-thumb"] = buildImageKitUrl(src, { width: minW });
 			}
 
 			// 添加 referrerpolicy（如果需要）解决 403 问题
@@ -66,20 +67,19 @@ export default function rehypeFigure() {
 			delete imgProps["data-thumb"];
 
 			// 构建包裹 <img> 的 div，data-src/data-thumb 放在此 div 上（与相册 PhotoCard 一致）
-			const wrapperDiv = h("div", {
-				"data-src": lgSrc,
-				"data-thumb": lgThumb,
-			}, [
-				h("img", { ...imgProps }),
-			]);
+			const wrapperDiv = h(
+				"div",
+				{
+					"data-src": lgSrc,
+					"data-thumb": lgThumb,
+				},
+				[h("img", { ...imgProps })],
+			);
 
 			if (parent && typeof index === "number") {
 				if (alt && alt.trim() !== "") {
 					// 有 alt：包裹在 figure > div + figcaption 中，居中显示
-					const figure = h("figure", {}, [
-						wrapperDiv,
-						h("figcaption", alt),
-					]);
+					const figure = h("figure", {}, [wrapperDiv, h("figcaption", alt)]);
 					parent.children[index] = h("center", figure);
 				} else {
 					// 无 alt：直接用 wrapper div 替换 img

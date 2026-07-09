@@ -146,7 +146,10 @@ export default function rehypeImageKit(options = {}) {
 			// lightGallery 缩略图：使用最小宽度
 			props["data-thumb"] = transformUrl(src, srcsetWidths[0]);
 			// lightGallery 灯箱大图：使用最大宽度
-			props["data-src"] = transformUrl(src, srcsetWidths[srcsetWidths.length - 1]);
+			props["data-src"] = transformUrl(
+				src,
+				srcsetWidths[srcsetWidths.length - 1],
+			);
 
 			// 注入 sizes
 			if (!props.sizes) {
