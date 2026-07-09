@@ -156,7 +156,7 @@ export const siteConfig: SiteConfig = {
 		// 是否开启分享海报生成功能
 		sharePoster: true,
 		// OpenGraph图片功能，生产环境自动开启，本地调试时关闭以提升构建速度
-		generateOgImages: import.meta.env.PROD,
+		generateOgImages: process.env.NODE_ENV === "production",
 	},
 
 	// bangumi配置
