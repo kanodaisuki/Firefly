@@ -586,3 +586,36 @@ html {
   @apply text-sm text-(--text-secondary) text-center mb-2;
 }
 
+/* ─── lightGallery 加载动画覆盖：用纯 CSS 旋转动画替代 GIF 马赛克 ─── */
+
+/* 移除默认的像素 GIF loading 图 */
+.lg-outer .lg-item:not(.lg-start-end-progress) {
+  background: none !important;
+}
+
+/* 使用 ::after 伪元素绘制 CSS 旋转环（矢量，任意分辨率都清晰） */
+.lg-outer .lg-item:not(.lg-start-end-progress)::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 48px;
+  height: 48px;
+  margin: -24px 0 0 -24px;
+  border-radius: 50%;
+  border: 3px solid color-mix(in srgb, var(--text-50, #999) 20%, transparent);
+  border-top-color: var(--text-50, #999);
+  animation: lg-css-spinner 0.7s linear infinite;
+}
+
+/* 图片加载完成后隐藏旋转环 */
+.lg-outer .lg-item.lg-complete::after {
+  display: none;
+}
+
+@keyframes lg-css-spinner {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
