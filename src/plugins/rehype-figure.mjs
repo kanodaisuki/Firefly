@@ -42,6 +42,11 @@ export default function rehypeFigure() {
 				imgProps.src = buildImageKitUrl(src, { width: fallbackWidth });
 				imgProps.srcset = buildImageKitSrcSet(src, widths);
 				imgProps.sizes = getRemoteImageSizes();
+				// lightGallery：最大宽度作灯箱大图，最小宽度作缩略图
+				const maxW = widths[widths.length - 1];
+				const minW = widths[0];
+				if (maxW) imgProps["data-src"] = buildImageKitUrl(src, { width: maxW });
+				if (minW) imgProps["data-thumb"] = buildImageKitUrl(src, { width: minW });
 			}
 
 			// 添加 referrerpolicy（如果需要）解决 403 问题
@@ -60,8 +65,11 @@ export default function rehypeFigure() {
 			}
 
 			// 创建 figure 元素，包含处理后的 img 和居中的 figcaption
-			const figure = h("figure", [
-				// 使用原始属性的 img 节点
+			// lightGallery 属性放在 figure 上，避免 lightGallery 对 <img> 忽略 data-src
+			const figure = h("figure", {
+				"data-src": imgProps["data-src"],
+				"data-thumb": imgProps["data-thumb"],
+			}, [
 				h("img", {
 					...imgProps,
 				}),

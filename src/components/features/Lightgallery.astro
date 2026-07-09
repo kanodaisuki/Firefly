@@ -222,31 +222,28 @@ import "lightgallery/css/lightgallery-bundle.min.css";
     const commonPlugins = getCommonPlugins();
     const commonSettings = getCommonSettings();
 
-    // 1. 文章内容图片 - 每个 .custom-md 容器独立为一个画廊
+    // 1. 文章内容图片 - .custom-md 中每个 <figure> 或 <img> 独立为一个画廊
     document.querySelectorAll(POST_IMG_SELECTOR).forEach((el) => {
-      const imgs = el.querySelectorAll("img");
-      if (imgs.length === 0) return;
+      const hasImages =
+        el.querySelectorAll("figure[data-src], img").length > 0;
+      if (!hasImages) return;
 
-      // lightGallery 对 <img> 直接取 src，忽略 data-src；
-      // 临时将 data-src 换到 src 上让它捕获高质量 URL
+      // <figure data-src>：lightGallery 自动读 data-src，无需处理
+      // <img>：把 data-src 临时换到 src 上，初始化后恢复
       const swaps: Array<{ img: HTMLImageElement; original: string }> = [];
-      imgs.forEach((img) => {
-        const lgSrc = img.getAttribute("data-src");
-        if (lgSrc) {
-          swaps.push({ img, original: img.src });
-          img.src = lgSrc;
-        }
+      el.querySelectorAll<HTMLImageElement>("img[data-src]").forEach((img) => {
+        swaps.push({ img, original: img.src });
+        img.src = img.getAttribute("data-src")!;
       });
 
       const instance = lg!(el as HTMLElement, {
         ...commonSettings,
         plugins: commonPlugins,
-        selector: "img",
+        selector: "figure[data-src], img",
         exThumbImage: "data-thumb",
       });
       instances.push(instance);
 
-      // 恢复页面显示用的 src
       for (const { img, original } of swaps) {
         img.src = original;
       }
