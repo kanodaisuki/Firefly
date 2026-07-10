@@ -1,4 +1,4 @@
----
+﻿---
 import { getImage } from "astro:assets";
 import { Icon } from "astro-icon/components";
 import EncryptedContent from "@/components/features/EncryptedContent.astro";
@@ -8,7 +8,6 @@ import I18nKey from "@/i18n/i18nKey";
 import { i18n } from "@/i18n/translation";
 import MainGridLayout from "@/layouts/MainGridLayout.astro";
 import {
-	buildPhotoThumbnailSrc,
 	getAlbumCover,
 	scanAlbumPhotos,
 } from "@/utils/gallery-utils";
@@ -37,7 +36,6 @@ if (!albumMeta) {
 const photos = scanAlbumPhotos(albumMeta.id);
 const cover = getAlbumCover(albumMeta, photos);
 const columnWidth = galleryConfig.columnWidth || 240;
-const allPhotos = buildPhotoThumbnailSrc(photos, albumMeta.thumbnail);
 const defaultBackToGallery = url("/gallery/");
 
 // LQIP 渐变占位
@@ -98,7 +96,7 @@ const optimizedCover =
             )}
             <span class="inline-flex items-center gap-1">
               <Icon is:inline name="material-symbols:photo-library" class="text-sm" />
-              {allPhotos.length} {i18n(I18nKey.galleryPhotos)}
+              {photos.length} {i18n(I18nKey.galleryPhotos)}
             </span>
           </div>
           {albumMeta.tags && albumMeta.tags.length > 0 && (
@@ -138,7 +136,7 @@ const optimizedCover =
               {albumMeta.location}
             </span>
           )}
-          <span>{allPhotos.length} {i18n(I18nKey.galleryPhotos)}</span>
+          <span>{photos.length} {i18n(I18nKey.galleryPhotos)}</span>
         </div>
       </div>
     )}
@@ -147,15 +145,15 @@ const optimizedCover =
   <!-- 瀑布流照片网格 -->
   <div class="w-full rounded-(--radius-large) overflow-hidden relative mt-4">
     <div class="card-base z-10 px-6 py-6 relative w-full">
-      {allPhotos.length > 0 ? (
+      {photos.length > 0 ? (
         albumMeta.password ? (
           <EncryptedContent password={albumMeta.password} slug={albumMeta.id} hint={albumMeta.passwordHint}>
             <div
               class="gallery-masonry"
               style={`column-count: 2; column-gap: 0.75rem; --col-width: ${columnWidth}px;`}
             >
-              {allPhotos.map((photo) => (
-                <PhotoCard src={photo.src} albumId={albumMeta.id} thumbSrc={photo.thumbSrc} />
+              {photos.map((photo) => (
+                <PhotoCard src={photo} albumId={albumMeta.id} />
               ))}
             </div>
           </EncryptedContent>
@@ -164,8 +162,8 @@ const optimizedCover =
             class="gallery-masonry"
             style={`column-count: 2; column-gap: 0.75rem; --col-width: ${columnWidth}px;`}
           >
-            {allPhotos.map((photo) => (
-              <PhotoCard src={photo.src} albumId={albumMeta.id} thumbSrc={photo.thumbSrc} />
+            {photos.map((photo) => (
+              <PhotoCard src={photo} albumId={albumMeta.id} />
             ))}
           </div>
         )

@@ -7,15 +7,25 @@ export type GalleryAlbum = {
 	location?: string; // 拍摄地点
 	tags?: string[]; // 标签（用于首页筛选）
 	cover?: string; // 手动指定封面（可选，省略则自动取 cover.* 或第一张）
-	thumbnail?: GalleryThumbnailConfig; // 相册缩略图配置（可选）
 	password?: string; // 加密密码（非空时启用加密）
 	passwordHint?: string; // 密码提示
 };
 
-// 相册缩略图配置（相册级）
-export type GalleryThumbnailConfig = {
-	enabled?: boolean; // 是否启用缩略图 URL 转换
-	rule?: string; // URL 模板规则，如 "${base}.md.${ext}${query}${hash}"
+export type GalleryIndexLayoutMode = "grid" | "flow";
+
+export type GalleryIndexLayoutConfig = {
+	mode?: GalleryIndexLayoutMode; // 首页布局模式：grid(固定网格) / flow(流式布局)
+	enableSearch?: boolean; // 是否启用相册搜索，默认 true
+	enableTagFilter?: boolean; // 是否启用标签筛选，默认 true
+	flowMinColumnWidth?: number; // 流式布局最小列宽(px)，默认 280
+	flowMaxColumns?: number; // 流式布局最大列数，默认 2
+	flowGap?: number; // 流式布局列间距(px)，默认 16
+	adaptiveAspectRatio?: boolean; // 根据封面横竖屏自动使用 3:2/2:3 比例，默认 true
+};
+
+export type GalleryPaginationConfig = {
+	enabled?: boolean; // 是否开启分页，默认 false
+	albumsPerPage?: number; // 每页相册数量，默认 12
 };
 
 // 相册配置
