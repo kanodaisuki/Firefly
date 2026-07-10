@@ -9,6 +9,7 @@ import { i18n } from "@/i18n/translation";
 import MainGridLayout from "@/layouts/MainGridLayout.astro";
 import {
 	getAlbumCover,
+	getSortedAlbums,
 	scanAlbumPhotos,
 } from "@/utils/gallery-utils";
 import { shouldUseImageKitForUrl } from "@/utils/image-utils";
@@ -37,6 +38,12 @@ const photos = scanAlbumPhotos(albumMeta.id);
 const cover = getAlbumCover(albumMeta, photos);
 const columnWidth = galleryConfig.columnWidth || 240;
 const defaultBackToGallery = url("/gallery/");
+
+// 获取排序后的相册列表用于 prev/next 导航
+const sortedAlbums = getSortedAlbums(galleryConfig.albums);
+const currentAlbumIndex = sortedAlbums.findIndex((a) => a.id === albumId);
+const prevAlbum = currentAlbumIndex > 0 ? sortedAlbums[currentAlbumIndex - 1] : null;
+const nextAlbum = currentAlbumIndex < sortedAlbums.length - 1 ? sortedAlbums[currentAlbumIndex + 1] : null;
 
 // LQIP 渐变占位
 const coverLqipProps = cover
@@ -174,6 +181,41 @@ const optimizedCover =
         </div>
       )}
     </div>
+  </div>
+
+  <!-- 上一个相册 / 下一个相册 导航 -->
+  <div
+    class="flex flex-col md:flex-row justify-between mt-4 mb-4 gap-4 overflow-hidden w-full"
+  >
+    <a
+      href={prevAlbum ? url(`/gallery/${prevAlbum.id}/`) : defaultBackToGallery}
+      class="w-full font-bold overflow-hidden active:scale-95"
+    >
+      <div class="btn-card rounded-2xl w-full h-15 max-w-full px-4 flex items-center justify-start! gap-4">
+        <Icon is:inline
+          name="material-symbols:chevron-left-rounded"
+          class="text-[2rem] text-(--primary)"
+        />
+        <div class="overflow-hidden transition text-ellipsis whitespace-nowrap max-w-[calc(100%-3rem)] text-black/75 dark:text-white/75">
+          {prevAlbum?.name || i18n(I18nKey.gallery)}
+        </div>
+      </div>
+    </a>
+
+    <a
+      href={nextAlbum ? url(`/gallery/${nextAlbum.id}/`) : defaultBackToGallery}
+      class="w-full font-bold overflow-hidden active:scale-95"
+    >
+      <div class="btn-card rounded-2xl w-full h-15 max-w-full px-4 flex items-center justify-end! gap-4">
+        <div class="overflow-hidden transition text-ellipsis whitespace-nowrap max-w-[calc(100%-3rem)] text-black/75 dark:text-white/75">
+          {nextAlbum?.name || i18n(I18nKey.gallery)}
+        </div>
+        <Icon is:inline
+          name="material-symbols:chevron-right-rounded"
+          class="text-[2rem] text-(--primary)"
+        />
+      </div>
+    </a>
   </div>
 
 </MainGridLayout>

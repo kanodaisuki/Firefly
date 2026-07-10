@@ -61,3 +61,26 @@ export function getAlbumCover(album: GalleryAlbum, photos: string[]): string {
 	const coverFile = photos.find((p) => /\/cover\./i.test(p));
 	return coverFile || photos[0] || "";
 }
+
+/** 排序后的相册（含封面和照片数量） */
+export type SortedAlbum = GalleryAlbum & { cover: string; photoCount: number };
+
+/**
+ * 获取排序后的相册列表（含封面和照片数量）
+ * 按日期降序排列，最新的相册在前
+ */
+export function getSortedAlbums(albums: GalleryAlbum[]): SortedAlbum[] {
+	const parseAlbumTime = (date?: string) => {
+		if (!date) return 0;
+		const timestamp = Date.parse(date);
+		return Number.isNaN(timestamp) ? 0 : timestamp;
+	};
+
+	return [...albums]
+		.sort((a, b) => parseAlbumTime(b.date) - parseAlbumTime(a.date))
+		.map((album) => {
+			const photos = scanAlbumPhotos(album.id);
+			const cover = getAlbumCover(album, photos);
+			return { ...album, cover, photoCount: photos.length };
+		});
+}

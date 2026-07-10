@@ -369,6 +369,8 @@ export const zh_CN: Translation = {
 	[Key.galleryAlbums]: "本相册",
 	[Key.galleryNoAlbums]: "暂无相册",
 	[Key.galleryBackToAlbums]: "返回相册列表",
+	[Key.galleryPrevAlbum]: "上一个相册",
+	[Key.galleryNextAlbum]: "下一个相册",
 	[Key.searchAlbums]: "搜索相簿...",
 
 	// 密码保护
