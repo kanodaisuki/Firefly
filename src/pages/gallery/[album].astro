@@ -1,6 +1,7 @@
 ﻿---
 import { getImage } from "astro:assets";
 import { Icon } from "astro-icon/components";
+import Comment from "@components/comment/index.astro";
 import EncryptedContent from "@/components/features/EncryptedContent.astro";
 import PhotoCard from "@/components/pages/gallery/PhotoCard.astro";
 import { galleryConfig, siteConfig } from "@/config";
@@ -217,6 +218,9 @@ const optimizedCover =
       </div>
     </a>
   </div>
+
+  <!-- 评论 -->
+  {albumMeta.comment && !albumMeta.password && <Comment customPath={`/gallery/${albumMeta.id}/`} title={albumMeta.name} />}
 
 </MainGridLayout>
 

@@ -7,8 +7,8 @@
  * @module imagekit-image-service
  */
 
-import sharpService from "astro/assets/services/sharp";
 import type { AstroConfig, ExternalImageService, ImageTransform } from "astro";
+import sharpService from "astro/assets/services/sharp";
 
 /**
  * ImageKit 服务配置项

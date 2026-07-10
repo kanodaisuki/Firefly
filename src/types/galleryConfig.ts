@@ -9,6 +9,7 @@ export type GalleryAlbum = {
 	cover?: string; // 手动指定封面（可选，省略则自动取 cover.* 或第一张）
 	password?: string; // 加密密码（非空时启用加密）
 	passwordHint?: string; // 密码提示
+	comment?: boolean; // 是否启用评论（可选，默认 false）
 };
 
 export type GalleryIndexLayoutMode = "grid" | "flow";

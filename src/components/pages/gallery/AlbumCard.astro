@@ -2,9 +2,9 @@
 import { getImage } from "astro:assets";
 import I18nKey from "@/i18n/i18nKey";
 import { i18n } from "@/i18n/translation";
+import { shouldUseImageKitForUrl } from "@/utils/image-utils";
 import { getLqipProps } from "@/utils/lqip-utils";
 import { url } from "@/utils/url-utils";
-import { shouldUseImageKitForUrl } from "@/utils/image-utils";
 
 interface Props {
 	id: string;
