@@ -86,6 +86,9 @@ importers:
       ci-info:
         specifier: ^4.4.0
         version: 4.4.0
+      colorthief:
+        specifier: ^3.4.0
+        version: 3.4.0(sharp@0.35.2)
       dayjs:
         specifier: ^1.11.21
         version: 1.11.21
@@ -2629,6 +2632,15 @@ packages:
 
   colord@2.9.3:
     resolution: {integrity: sha512-jeC1axXpnb0/2nn/Y1LPuLdgXBLH7aDcHu4KEKfqw3CUhX7ZpfBSlPKyqXE6btIgEzfWtrX3/tyBCaCvXvMkOw==}
+
+  colorthief@3.4.0:
+    resolution: {integrity: sha512-mwXc0OHLsb1on2JtVD2go31GTyHwBLtkRruggz6H/bY2vI1mL8v8Mvam9qIWiI4khnsbQXoBs8M+EofnlcQitQ==}
+    hasBin: true
+    peerDependencies:
+      sharp: '>=0.33.0'
+    peerDependenciesMeta:
+      sharp:
+        optional: true
 
   comma-separated-tokens@2.0.3:
     resolution: {integrity: sha512-Fu4hJdvzeylCfQPp9SGWidpzrMs7tTrlu6Vb8XGaRGck8QSNZJJp538Wrb60Lax4fPwR64ViY468OIUTbRlGZg==}
@@ -8538,6 +8550,10 @@ snapshots:
   color-name@1.1.4: {}
 
   colord@2.9.3: {}
+
+  colorthief@3.4.0(sharp@0.35.2):
+    optionalDependencies:
+      sharp: 0.35.2
 
   comma-separated-tokens@2.0.3: {}
 

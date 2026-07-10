@@ -42,10 +42,128 @@ import "lightgallery/css/lightgallery-bundle.min.css";
   const BG_LIGHT = "#f5f5f5";
   /** 深色模式灯箱背景色 */
   const BG_DARK = "#0d0d0d";
+  /** 背景色过渡动画 */
+  const BG_TRANSITION = "background-color 0.2s ease";
 
   /** 判断当前是否为深色模式 */
   function isDarkMode(): boolean {
     return document.documentElement.classList.contains("dark");
+  }
+
+  // ─── ColorThief 动态背景色 ───────────────────────────────
+
+  import type { SwatchMap } from "colorthief";
+
+  /** ColorThief getSwatchesSync 函数引用 */
+  let getSwatchesSyncFn: typeof import("colorthief").getSwatchesSync | null = null;
+
+  /** 已缓存的语义色板，key 为图片 src */
+  const swatchCache = new Map<string, SwatchMap>();
+
+  /** 提取失败的图片 src 集合，避免反复重试 */
+  const failedUrls = new Set<string>();
+
+  /** 加载 ColorThief 模块并获取同步 API（仅首次触发网络请求） */
+  async function loadColorThief(): Promise<void> {
+    if (getSwatchesSyncFn) return;
+    const ct = await import("colorthief");
+    getSwatchesSyncFn = ct.getSwatchesSync;
+  }
+
+  /**
+   * 加载图片（处理跨域 CORS）。
+   * 优先使用 anonymous 模式，失败时回退到无 crossOrigin（同源场景）。
+   */
+  function loadImageForExtraction(src: string): Promise<HTMLImageElement> {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.crossOrigin = "anonymous";
+      img.onload = () => resolve(img);
+      img.onerror = () => {
+        // crossOrigin 失败时尝试不带 crossOrigin
+        const fallback = new Image();
+        fallback.onload = () => resolve(fallback);
+        fallback.onerror = () => reject(new Error(`Cannot load image: ${src}`));
+        fallback.src = src;
+      };
+      img.src = src;
+    });
+  }
+
+  /**
+   * 加载图片并同步提取语义色板，结果自动缓存。
+   * 图片加载是异步的（网络/缓存），色板提取是同步的（< 5ms 对于 100px 缩略图）。
+   * 返回 SwatchMap 或 null（失败时）。
+   */
+  async function extractSwatches(imgSrc: string): Promise<SwatchMap | null> {
+    // 命中成功缓存
+    const cached = swatchCache.get(imgSrc);
+    if (cached) return cached;
+
+    // 已知失败，不再重试
+    if (failedUrls.has(imgSrc)) return null;
+
+    try {
+      await loadColorThief();
+      if (!getSwatchesSyncFn) return null;
+
+      const img = await loadImageForExtraction(imgSrc);
+      // 同步提取——缩略图仅 100px，执行时间 < 5ms，无感知卡顿
+      const swatches = getSwatchesSyncFn(img);
+      swatchCache.set(imgSrc, swatches);
+      return swatches;
+    } catch {
+      failedUrls.add(imgSrc);
+      return null;
+    }
+  }
+
+  /**
+   * 根据当前主题从语义色板中获取背景色。
+   * 浅色用 Muted，深色用 DarkMuted；失败返回 null。
+   */
+  function pickBgColor(swatches: SwatchMap | null): string | null {
+    if (!swatches) return null;
+
+    const role = isDarkMode() ? "DarkMuted" : "Muted";
+    const primary = swatches[role];
+    if (primary) return primary.color.hex();
+
+    // 回退：浅色用 LightMuted / 深色用 DarkVibrant
+    const fallbackRole = isDarkMode() ? "DarkVibrant" : "LightMuted";
+    const fallback = swatches[fallbackRole];
+    return fallback?.color.hex() ?? null;
+  }
+
+  /**
+   * 更新当前灯箱实例的背景色为当前图片的动态颜色。
+   * 捕获起始幻灯片索引，异步提取完成后验证未切换才应用颜色，避免竞态。
+   */
+  async function updateBackdropForCurrentSlide(instance: LightGallery): Promise<void> {
+    // 捕获本次提取对应的幻灯片索引
+    const slideIndex = instance.index;
+
+    try {
+      const item = instance.galleryItems?.[slideIndex];
+      if (!item) return;
+
+      // 优先使用缩略图（加载更快），回退到原图
+      const imgSrc = item.thumb || item.src;
+      if (!imgSrc) return;
+
+      const swatches = await extractSwatches(imgSrc);
+
+      // 提取完成时验证幻灯片未切换，防止过期结果覆盖当前幻灯片
+      if (instance.index !== slideIndex) return;
+
+      const color = pickBgColor(swatches);
+      if (color) {
+        instance.$backdrop?.css("background-color", color);
+        instance.$backdrop?.css("transition", BG_TRANSITION);
+      }
+    } catch {
+      // 静默失败，保持默认背景色
+    }
   }
 
   // ─── 插件组合 ───────────────────────────────────────────
@@ -138,17 +256,45 @@ import "lightgallery/css/lightgallery-bundle.min.css";
       try { inst.destroy(); } catch { /* 实例可能已被销毁 */ }
     }
     instances.length = 0;
+    // 清空动态背景色缓存，避免跨页面污染
+    swatchCache.clear();
+    failedUrls.clear();
+  }
+
+  /**
+   * 为 lightGallery 实例绑定幻灯片切换 & 打开事件，
+   * 触发动态背景色提取。
+   */
+  function attachColorEvents(instance: LightGallery): void {
+    const handler = () => updateBackdropForCurrentSlide(instance);
+    instance.LGel.on("lgAfterSlide", handler);
+    instance.LGel.on("lgAfterOpen", handler);
   }
 
   /**
    * 根据当前深浅色模式，更新所有已打开灯箱实例的背景色。
+   * 优先使用已缓存的语义色板动态颜色，无缓存时回退到默认色。
    * 由 MutationObserver 在主题切换时触发。
    */
   function updateBackdropColors(): void {
-    const color = isDarkMode() ? BG_DARK : BG_LIGHT;
     for (const inst of instances) {
       try {
+        // 尝试从当前幻灯片的缓存色板中获取主题对应颜色
+        const item = inst.galleryItems?.[inst.index];
+        const imgSrc = item?.thumb || item?.src;
+        if (imgSrc) {
+          const cached = swatchCache.get(imgSrc);
+          const dynamicColor = pickBgColor(cached ?? null);
+          if (dynamicColor) {
+            inst.$backdrop?.css("background-color", dynamicColor);
+            inst.$backdrop?.css("transition", BG_TRANSITION);
+            continue;
+          }
+        }
+        // 回退到默认背景色
+        const color = isDarkMode() ? BG_DARK : BG_LIGHT;
         inst.$backdrop?.css("background-color", color);
+        inst.$backdrop?.css("transition", BG_TRANSITION);
       } catch { /* 实例可能已销毁 */ }
     }
   }
@@ -168,19 +314,21 @@ import "lightgallery/css/lightgallery-bundle.min.css";
     document.querySelectorAll(POST_IMG_SELECTOR).forEach((el) => {
       const items = el.querySelectorAll("[data-src]");
       if (items.length === 0) return;
-      instances.push(lg!(el as HTMLElement, {
+      const inst = lg!(el as HTMLElement, {
         ...commonSettings,
         plugins: commonPlugins,
         selector: "[data-src]",
         exThumbImage: "data-thumb",
-      }));
+      });
+      attachColorEvents(inst);
+      instances.push(inst);
     });
 
     // 2. 相册页面 —— 每个 .gallery-masonry 容器独立为一个画廊
     document.querySelectorAll(GALLERY_SELECTOR).forEach((el) => {
       const items = el.querySelectorAll("[data-src]");
       if (items.length === 0) return;
-      instances.push(lg!(el as HTMLElement, {
+      const inst = lg!(el as HTMLElement, {
         ...commonSettings,
         plugins: commonPlugins,
         selector: "[data-src]",
@@ -189,20 +337,24 @@ import "lightgallery/css/lightgallery-bundle.min.css";
         thumbHeight: "60px",
         animateThumb: true,
         thumbnail: true,
-      }));
+      });
+      attachColorEvents(inst);
+      instances.push(inst);
     });
 
     // 3. 封面图 / 动态图片 —— 类 Medium 放大体验，无缩略图
     document.querySelectorAll(MISC_IMG_SELECTOR).forEach((el) => {
       const imgs = el.querySelectorAll("img");
       if (imgs.length === 0) return;
-      instances.push(lg!(el as HTMLElement, {
+      const inst = lg!(el as HTMLElement, {
         ...commonSettings,
         plugins: getMiscPlugins(),
         selector: "img",
         mediumZoom: true,
         margin: 80,
-      }));
+      });
+      attachColorEvents(inst);
+      instances.push(inst);
     });
   }
 
