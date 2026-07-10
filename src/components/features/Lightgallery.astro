@@ -195,8 +195,149 @@ import "lightgallery/css/lightgallery-bundle.min.css";
   // ─── 通用设置 ───────────────────────────────────────────
 
   /**
-   * 生成 lightGallery 通用设置。
-   * 背景色根据当前深浅色模式自动选择。
+   * mobileSettings 支持以下全部配置项（按类别分组）。
+   * lightGallery 在移动端默认隐藏关闭按钮和控制栏，
+   * 需要通过 mobileSettings 显式启用。
+   *
+   * 注意：mobileSettings 中的值会覆盖主设置中对应的值。
+   * 未在 mobileSettings 中列出的项，沿用主设置的值。
+   *
+   * ======================== 核心设置 ========================
+   *
+   * mode               - 幻灯片过渡动画类型，如 'lg-slide'、'lg-fade' 等
+   * easing             - 过渡动画的 CSS easing 属性
+   * speed              - 过渡动画时长（毫秒）
+   * licenseKey         - 商业许可证密钥
+   * height             - 画廊高度，如 '100%'、'300px'
+   * width              - 画廊宽度
+   * addClass           - 为画廊容器添加自定义 CSS 类
+   * startClass         - 画廊起始动画类名
+   * zoomFromOrigin     - 是否从原始图片位置放大（需 data-lg-size 属性）
+   * startAnimationDuration - 从原图放大动画的时长
+   * backdropDuration   - 背景遮罩过渡时长（毫秒）
+   * container          - 画廊挂载的容器元素
+   * hideBarsDelay      - 自动隐藏控制栏的延迟（毫秒），0 则始终显示
+   * showBarsAfter      - 画廊打开后首次显示控制栏的延迟（毫秒）
+   * slideDelay         - 幻灯片切换延迟（毫秒）
+   * supportLegacyBrowser - 是否支持旧浏览器（srcset polyfill）
+   * allowMediaOverlap  - 工具栏/标题是否与媒体重叠
+   * videoMaxSize       - 视频最大尺寸
+   * loadYouTubePoster  - 是否自动加载 YouTube 封面图
+   * defaultCaptionHeight - 计算媒体位置时使用的默认标题高度
+   * ariaLabelledby     - aria-labelledby 属性值
+   * ariaDescribedby    - aria-describedby 属性值
+   * hideScrollbar      - 打开画廊时是否隐藏页面滚动条
+   * resetScrollPosition - 关闭画廊时是否恢复之前的滚动位置
+   * closable           - 是否允许关闭画廊
+   * swipeToClose       - 是否允许垂直滑动关闭画廊
+   * closeOnTap         - 是否允许点击背景黑色区域关闭画廊
+   * showCloseIcon      - 是否显示关闭按钮
+   * showMaximizeIcon   - 是否显示最大化按钮
+   * loop               - 是否循环播放（最后一张后回到第一张）
+   * escKey             - 是否允许按 Esc 键关闭
+   * keyPress           - 是否启用键盘导航
+   * trapFocus          - 是否将焦点限制在画廊内
+   * controls           - 是否显示上一页/下一页按钮
+   * slideEndAnimation  - 是否启用幻灯片结束动画
+   * hideControlOnEnd   - 首/末幻灯片是否隐藏导航按钮（loop 为 true 时忽略）
+   * mousewheel         - 是否允许鼠标滚轮切换幻灯片
+   * getCaptionFromTitleOrAlt - 是否从 alt/title 属性获取标题
+   * appendSubHtmlTo    - 子 HTML 挂载位置：'.lg-sub-html' | '.lg-item' | '.lg-outer'
+   * subHtmlSelectorRelative - data-sub-html 选择器是否相对于当前项
+   * preload            - 预加载幻灯片数量
+   * numberOfSlideItemsInDom - DOM 中保留的幻灯片最少数量（最小 3）
+   * selector           - 自定义选择器，用于获取画廊媒体数据
+   * selectWithin       - 选择器的父容器选择器
+   * nextHtml           - 自定义"下一张"按钮 HTML
+   * prevHtml           - 自定义"上一张"按钮 HTML
+   * index              - 初始显示的幻灯片索引
+   * iframeWidth        - iframe 宽度
+   * iframeHeight       - iframe 高度
+   * iframeMaxWidth     - iframe 最大宽度
+   * iframeMaxHeight    - iframe 最大高度
+   * download           - 是否显示下载按钮
+   * counter            - 是否显示"当前/总数"计数器
+   * appendCounterTo    - 计数器挂载位置选择器
+   * swipeThreshold     - 滑动切换阈值（像素）
+   * enableSwipe        - 是否启用触摸滑动
+   * enableDrag         - 是否启用桌面鼠标拖拽
+   * dynamic            - 是否使用动态模式（通过 dynamicEl 编程式启动）
+   * dynamicEl          - 动态模式下的画廊元素数组
+   * extraProps         - 需要从选择器获取的额外属性名数组
+   * exThumbImage       - 自定义缩略图属性名（如 'data-external-thumb-image'）
+   * isMobile           - 自定义移动端检测函数
+   * strings            - 自定义字符串（用于国际化）
+   * plugins            - 插件构造函数数组
+   *
+   * ======================== Zoom 插件 ========================
+   *
+   * scale              - 缩放步进值
+   * zoom               - 是否启用缩放
+   * infiniteZoom       - 是否允许无限缩放（超过原图尺寸）
+   * actualSize         - 是否显示"实际尺寸"按钮
+   * enableZoomAfter    - 过渡完成后延迟启用缩放的时间（毫秒）
+   * showZoomInOutIcons - 是否显示放大/缩小图标
+   * actualSizeIcons    - 实际尺寸图标类名配置
+   * zoomPluginStrings  - 缩放插件的 aria-label 字符串
+   *
+   * ======================== Thumbnail 插件 ========================
+   *
+   * thumbnail          - 是否启用缩略图
+   * animateThumb       - 缩略图是否使用动画过渡
+   * currentPagerPosition - 选中缩略图位置：'left' | 'middle' | 'right'
+   * alignThumbnails    - 缩略图对齐方式：'left' | 'middle' | 'right'
+   * thumbWidth         - 缩略图宽度（像素）
+   * thumbHeight        - 缩略图高度（如 '60px'）
+   * thumbMargin        - 缩略图间距（像素）
+   * appendThumbnailsTo - 缩略图挂载位置：'.lg-outer' | '.lg-components'
+   * toggleThumb        - 是否显示切换缩略图按钮
+   * enableThumbDrag    - 是否启用桌面端缩略图拖拽
+   * enableThumbSwipe   - 是否启用触摸端缩略图滑动
+   * thumbnailSwipeThreshold - 缩略图滑动切换阈值（像素）
+   * loadYouTubeThumbnail    - 是否自动加载 YouTube 缩略图
+   * thumbnailPluginStrings  - 缩略图插件的 aria-label 字符串
+   *
+   * ======================== Autoplay 插件 ========================
+   *
+   * autoplay           - 是否启用自动播放
+   * slideShowAutoplay  - 是否启用幻灯片自动播放
+   * slideShowInterval  - 自动播放间隔（毫秒）
+   * progressBar        - 是否显示自动播放进度条
+   * forceSlideShowAutoplay - 用户操作后是否继续自动播放
+   * autoplayControls   - 是否显示自动播放控制按钮
+   * appendAutoplayControlsTo - 自动播放按钮挂载位置
+   * autoplayPluginStrings    - 自动播放插件的 aria-label 字符串
+   *
+   * ======================== Fullscreen 插件 ========================
+   *
+   * fullScreen         - 是否启用全屏
+   * fullscreenPluginStrings - 全屏插件的 aria-label 字符串
+   *
+   * ======================== Rotate 插件 ========================
+   *
+   * rotate             - 是否启用旋转
+   * rotateSpeed        - 旋转动画速度（毫秒）
+   * rotateLeft         - 是否显示左旋转按钮
+   * rotateRight        - 是否显示右旋转按钮
+   * flipHorizontal     - 是否显示水平翻转按钮
+   * flipVertical       - 是否显示垂直翻转按钮
+   * rotatePluginStrings - 旋转插件的 aria-label 字符串
+   *
+   * ======================== Hash 插件 ========================
+   *
+   * hash               - 是否启用 URL hash（每张图有独立 URL）
+   * galleryId          - 画廊唯一 ID（同页多个画廊时必须设置）
+   * customSlideName    - 是否使用自定义幻灯片名称
+   *
+   * ======================== Pager 插件 ========================
+   *
+   * pager              - 是否启用分页器
+   *
+   * ======================== MediumZoom 插件 ========================
+   *
+   * mediumZoom         - 是否启用 Medium 风格缩放体验
+   * margin             - 图片与画廊边缘间距
+   * backgroundColor    - 画廊背景色（可被各项目的 lg-background-color 覆盖）
    */
   function getCommonSettings(): LightGallerySettings {
     return {
@@ -217,6 +358,32 @@ import "lightgallery/css/lightgallery-bundle.min.css";
       hash: true,
       infiniteZoom: true,
       backgroundColor: isDarkMode() ? BG_DARK : BG_LIGHT,
+      // 移动端专用设置（覆盖主设置中的对应项）
+      mobileSettings: {
+        // ── 关闭 & 手势 ──
+        closable: true,         // 允许关闭画廊
+        showCloseIcon: true,    // 显示关闭按钮（移动端默认隐藏，必须显式启用）
+        closeOnTap: true,       // 点击背景黑色区域关闭
+        swipeToClose: true,     // 垂直滑动关闭
+        escKey: true,           // Esc 键关闭
+        // ── 控制栏 ──
+        controls: false,         // 显示上/下一张按钮（移动端默认隐藏）
+        showMaximizeIcon: false, // 显示最大化按钮
+        counter: true,          // 显示"当前/总数"计数器
+        // ── 自动隐藏 ──
+        hideBarsDelay: 3000,    // 自动隐藏控制栏延迟（毫秒），0 则始终显示
+        showBarsAfter: 100,     // 打开后首次显示控制栏的延迟（毫秒）
+        // ── 其他 ──
+        download: false,        // 不显示下载按钮
+        loop: true,             // 循环播放
+        preload: 2,             // 预加载前后各 2 张
+        enableSwipe: true,      // 启用触摸滑动
+        swipeThreshold: 50,     // 滑动切换阈值（像素）
+        speed: 500,             // 过渡动画时长（毫秒）.
+        rotateLeft: false,         // 不显示左旋转按钮
+        flipHorizontal: false,       // 不显示水平翻转按钮
+        flipVertical: false,         // 不显示垂直翻转按钮
+      },
     };
   }
 
