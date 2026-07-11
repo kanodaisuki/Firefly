@@ -18,6 +18,7 @@ export type {
 	GalleryPaginationConfig,
 } from "./galleryConfig";
 export type { LicenseConfig } from "./licenseConfig";
+export type { MermaidConfig } from "./mermaidConfig";
 export type { MusicPlayerConfig } from "./musicConfig";
 export type {
 	NavBarConfig,

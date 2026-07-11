@@ -25,6 +25,7 @@ import remarkDirective from "remark-directive"; /* Handle directives */
 import remarkMath from "remark-math";
 import remarkSectionize from "remark-sectionize";
 import { expressiveCodeConfig, fontConfig, fontsList, galleryConfig, plantumlConfig, siteConfig } from "./src/config";
+import { expressiveCodeConfig, fontConfig, fontsList, mermaidConfig, plantumlConfig, siteConfig } from "./src/config";
 import { collectUsedFontCssVars } from "./src/utils/fontHelper";
 import I18nKey from "./src/i18n/i18nKey";
 import { i18n } from "./src/i18n/translation";
@@ -33,6 +34,7 @@ import { GithubCardComponent } from "./src/plugins/rehype-component-github-card.
 import rehypeEmailProtection from "./src/plugins/rehype-email-protection.mjs";
 import rehypeExternalLinks from "./src/plugins/rehype-external-links.mjs";
 import rehypeFigure from "./src/plugins/rehype-figure.mjs";
+import { rehypeDiagramPanZoom } from "./src/plugins/rehype-diagram-panzoom.mjs";
 import { rehypeMermaid } from "./src/plugins/rehype-mermaid.mjs";
 import { rehypePlantuml } from "./src/plugins/rehype-plantuml.mjs";
 import rehypeImageKit from "./src/plugins/rehype-imagekit.mjs";
@@ -280,7 +282,7 @@ export default defineConfig({
 				[rehypeKatex, { katex }],
 				[rehypeCallouts, { theme: siteConfig.post.rehypeCallouts.theme }],
 				rehypeSlug,
-				rehypeMermaid,
+				[rehypeMermaid, mermaidConfig],
 				rehypePlantuml,
 				[
 					rehypeImageKit,
@@ -292,6 +294,7 @@ export default defineConfig({
 						widths: siteConfig.imageOptimization?.imagekit?.widths,
 					},
 				],
+				rehypeDiagramPanZoom,
 				rehypeFigure,
 				[rehypeExternalLinks, { siteUrl: siteConfig.site_url }],
 				[rehypeEmailProtection, { method: "base64" }], // 邮箱保护插件，支持 'base64' 或 'rot13'
