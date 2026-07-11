@@ -207,22 +207,9 @@ export type SiteConfig = {
 			 */
 			pathPrefix?: string;
 			/**
-			 * 默认响应式宽度集合（用于生成 srcset）
-			 */
-			widths?: number[];
-			/**
 			 * 远程图片默认 sizes
 			 */
 			sizes?: string;
-			/**
-			 * ImageKit 裁剪模式，默认 c-at_max
-			 */
-			fit?: "at_max" | "maintain_ratio" | "pad_resize" | "force";
-			/**
-			 * 启用AVIF转换？
-			 * AVIF是ImageKit的付费功能，免费账户无法使用
-			 */
-			enableAvif?: boolean;
 			/**
 			 * 远程图片兜底宽度（用于避免 inferSize 远程探测失败）
 			 */
@@ -232,12 +219,11 @@ export type SiteConfig = {
 			 */
 			defaultHeight?: number;
 			/**
-			 * 宽度到转换参数模板的映射
-			 * key 为宽度（需与 widths 对应），value 为 tr: 后的参数串
-			 * 支持占位符：{width} {height} {quality} {fit} {format}
-			 * 也支持 default 作为兜底模板
+			 * 宽度到转换规则的映射列表
+			 * 每个条目指定一个目标宽度及其完整的 tr: 转换规则
+			 * transformRule 直接作为 URL 路径段插入，不做模板替换
 			 */
-			transformsByWidth?: Record<string, string>;
+			transforms?: { width: number; transformRule: string }[];
 		};
 	};
 };

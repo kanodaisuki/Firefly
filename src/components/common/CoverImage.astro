@@ -110,7 +110,7 @@ const lqipProps = isLocal
 		: getLqipProps(src);
 
 // 响应式配置
-const widths = preview ? [320, 480, 640, 960] : [800, 1200, 1600, 2000];
+const widths = preview ? [320, 480, 640, 800] : [800, 1080, 1440, 1920];
 const sizes = preview
 	? "(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 320px"
 	: "(max-width: 768px) 100vw, (max-width: 1200px) 90vw, 1200px";
@@ -120,8 +120,8 @@ const getPictureSizeProps = (image: ImageMetadata) => {
 	if (preview) {
 		return { width: 400, height: 300, widths, sizes };
 	}
-	const baseHeight = Math.round(1200 / (image.width / image.height));
-	return { width: 1200, height: baseHeight, widths, sizes };
+	const baseHeight = Math.round(1080 / (image.width / image.height));
+	return { width: 1080, height: baseHeight, widths, sizes };
 };
 
 // 是否显示加载动画

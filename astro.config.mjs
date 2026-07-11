@@ -115,13 +115,11 @@ export default defineConfig({
 				enabled: siteConfig.imageOptimization?.imagekit?.enabled ?? false,
 				domains: siteConfig.imageOptimization?.imagekit?.domains || [],
 				pathPrefix: siteConfig.imageOptimization?.imagekit?.pathPrefix,
-				fit: siteConfig.imageOptimization?.imagekit?.fit || "at_max",
 				quality: siteConfig.imageOptimization?.quality ?? 80,
-				enableAvif: siteConfig.imageOptimization?.imagekit?.enableAvif === true,
 				defaultWidth: siteConfig.imageOptimization?.imagekit?.defaultWidth,
 				defaultHeight: siteConfig.imageOptimization?.imagekit?.defaultHeight,
-				transformsByWidth:
-					siteConfig.imageOptimization?.imagekit?.transformsByWidth || {},
+				transforms:
+					siteConfig.imageOptimization?.imagekit?.transforms || [],
 			},
 		},
 		domains: ['p.kksk.ltd'],
@@ -288,10 +286,8 @@ export default defineConfig({
 					rehypeImageKit,
 					{
 						domains: siteConfig.imageOptimization?.imagekit?.domains || [],
-						quality: siteConfig.imageOptimization?.quality ?? 80,
-						fit: siteConfig.imageOptimization?.imagekit?.fit || "at_max",
 						pathPrefix: siteConfig.imageOptimization?.imagekit?.pathPrefix,
-						widths: siteConfig.imageOptimization?.imagekit?.widths,
+						transforms: siteConfig.imageOptimization?.imagekit?.transforms,
 					},
 				],
 				rehypeDiagramPanZoom,

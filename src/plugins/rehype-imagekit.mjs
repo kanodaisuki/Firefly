@@ -25,10 +25,8 @@
 /**
  * @typedef {Object} ImageKitPluginOptions
  * @property {string[]} [domains]          - 允许处理的域名列表，为空时处理所有远程图片
- * @property {number}  [quality=80]        - 默认输出质量 (1-100)
- * @property {string}  [fit="at_max"]      - 裁剪/填充模式
  * @property {number}  [defaultWidth=800]  - 默认宽度
- * @property {number[]} [widths]           - srcset 宽度断点
+ * @property {{width: number, transformRule: string}[]} [transforms] - 宽度到变换规则的映射列表
  * @property {string}  [sizes]             - 默认 sizes，默认 "(max-width: 768px) 100vw, 800px"
  * @property {string}  [pathPrefix]        - URL 路径前缀，用于确定 tr: 段插入位置
  * @property {boolean} [lazy=true]         - 是否添加 loading="lazy"
@@ -38,18 +36,25 @@
 export default function rehypeImageKit(options = {}) {
 	const {
 		domains = [],
-		quality = 80,
-		fit = "at_max",
 		defaultWidth = 800,
-		widths: userWidths,
+		transforms,
 		sizes: defaultSizes = "(max-width: 768px) 100vw, 800px",
 		pathPrefix,
 		lazy = true,
 	} = options;
 
-	const srcsetWidths = userWidths?.length
-		? [...userWidths].sort((a, b) => a - b)
+	const srcsetWidths = transforms?.length
+		? transforms.map((t) => t.width).sort((a, b) => a - b)
 		: [320, 480, 640, 800, 960, 1280, 1600];
+
+	/**
+	 * 从 transforms 列表中按宽度查找对应的变换规则
+	 */
+	function findRuleByWidth(width) {
+		if (!transforms || transforms.length === 0) return null;
+		const entry = transforms.find((t) => t.width === width);
+		return entry ? entry.transformRule : null;
+	}
 
 	/**
 	 * 域名通配符匹配
@@ -74,14 +79,8 @@ export default function rehypeImageKit(options = {}) {
 	}
 
 	/**
-	 * 清理值中的逗号
-	 */
-	function clean(v) {
-		return String(v).replace(/,/g, "").trim();
-	}
-
-	/**
 	 * 在路径中找到或确定 tr: 段插入位置
+	 * 根据宽度在 transforms 中查找对应的 transformRule，直接作为路径段插入
 	 */
 	function buildImageKitPath(pathname, width) {
 		const segments = pathname.split("/").filter(Boolean);
@@ -95,7 +94,7 @@ export default function rehypeImageKit(options = {}) {
 		// 确定插入位置
 		let insertIndex = 0;
 		if (pathPrefix) {
-			const normalized = clean(pathPrefix).replace(/^\/+|\/+$/g, "");
+			const normalized = pathPrefix.replace(/^\/+|\/+$/g, "");
 			const prefixParts = normalized.split("/").filter(Boolean);
 			if (
 				prefixParts.length > 0 &&
@@ -106,10 +105,11 @@ export default function rehypeImageKit(options = {}) {
 			}
 		}
 
-		const transformParts = [`q-${quality}`, `c-${clean(fit)}`];
-		if (width) transformParts.push(`w-${Math.max(1, Math.round(width))}`);
+		// 查找宽度对应的变换规则，直接作为路径段
+		const rule = width ? findRuleByWidth(Math.max(1, Math.round(width))) : null;
+		const transformSegment = rule || `tr:w-${Math.round(width)}`;
 
-		segments.splice(insertIndex, 0, `tr:${transformParts.join(",")}`);
+		segments.splice(insertIndex, 0, transformSegment);
 		return `/${segments.join("/")}`;
 	}
 

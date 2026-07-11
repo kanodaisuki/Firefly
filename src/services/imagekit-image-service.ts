@@ -22,32 +22,18 @@ type ImageKitServiceConfig = {
 	domains?: string[];
 	/** URL 路径前缀，用于确定 `tr:` 变换段的插入位置 */
 	pathPrefix?: string;
-	/** 图片裁剪/填充模式 */
-	fit?: "at_max" | "maintain_ratio" | "pad_resize" | "force";
 	/** 默认输出质量 (1-100) */
 	quality?: number;
-	/** 是否启用 AVIF 格式输出 */
-	enableAvif?: boolean;
 	/** 无法获取远程尺寸时的默认宽度回退值 */
 	defaultWidth?: number;
 	/** 无法获取远程尺寸时的默认高度回退值 */
 	defaultHeight?: number;
-	/** 按宽度映射的自定义变换模板，支持 `{width}`、`{height}`、`{quality}`、`{fit}`、`{format}` 占位符 */
-	transformsByWidth?: Record<string, string>;
+	/** 宽度到变换规则的映射列表，transformRule 为完整的 tr: 变换段，直接插入 URL */
+	transforms?: { width: number; transformRule: string }[];
 };
 
 /** Astro 图片配置类型别名 */
 type ImageConfig = AstroConfig["image"];
-
-/**
- * 清理 URL 路径段，移除逗号并去除空白
- *
- * @param value - 原始路径段字符串
- * @returns 清理后的字符串
- */
-function sanitizeSegment(value: string): string {
-	return value.replace(/,/g, "").trim();
-}
 
 /**
  * 将 ImageTransform 的 src 统一转为字符串形式
@@ -141,10 +127,7 @@ function resolveInsertIndexByPrefix(
 	pathPrefix?: string,
 ): number {
 	if (!pathPrefix) return 0;
-	const normalizedPrefix = sanitizeSegment(pathPrefix).replace(
-		/^\/+|\/+$/g,
-		"",
-	);
+	const normalizedPrefix = pathPrefix.replace(/^\/+|\/+$/g, "");
 	if (!normalizedPrefix) return 0;
 
 	const prefixSegments = normalizedPrefix.split("/").filter(Boolean);
@@ -159,59 +142,30 @@ function resolveInsertIndexByPrefix(
 }
 
 /**
- * 规范化图片质量参数
+ * 从 transforms 列表中按宽度查找对应的变换规则
  *
- * 将各种格式的质量值统一为 1-100 的整数。
- *
- * @param rawQuality - 原始质量值（来自 ImageTransform）
- * @param fallback   - 回退默认值
- * @returns 规范化后的质量值 (1-100)
+ * @param width      - 目标图片宽度
+ * @param transforms - 变换规则列表
+ * @returns 匹配的 transformRule 字符串
+ * @throws 当宽度未在 transforms 中配置时抛出错误
  */
-function normalizeQuality(
-	rawQuality: ImageTransform["quality"],
-	fallback: number,
-): number {
-	const parsed =
-		typeof rawQuality === "number"
-			? rawQuality
-			: Number.parseInt(String(rawQuality), 10);
-	const effective = Number.isFinite(parsed) ? parsed : fallback;
-	return Math.max(1, Math.min(100, Math.round(effective)));
-}
-
-/**
- * 规范化图片裁剪/填充模式
- *
- * @param rawFit   - 原始裁剪模式（来自 ImageTransform）
- * @param fallback - 回退默认模式
- * @returns 规范化后的模式字符串
- */
-function normalizeFit(
-	rawFit: ImageTransform["fit"],
-	fallback?: ImageKitServiceConfig["fit"],
+function findTransformRule(
+	width: number,
+	transforms?: { width: number; transformRule: string }[],
 ): string {
-	const fit = rawFit || fallback || "at_max";
-	return sanitizeSegment(String(fit));
-}
-
-/**
- * 规范化输出图片格式
- *
- * @param rawFormat  - 原始格式（来自 ImageTransform）
- * @param enableAvif - 是否允许 AVIF 输出
- * @returns 规范化后的格式，或 `undefined` 表示保持原格式
- */
-function normalizeFormat(
-	rawFormat: ImageTransform["format"],
-	enableAvif: boolean,
-): "avif" | "webp" | "jpeg" | undefined {
-	if (!rawFormat) return undefined;
-	const normalized = String(rawFormat).toLowerCase();
-	if (normalized === "jpg") return "jpeg";
-	if (normalized === "jpeg") return "jpeg";
-	if (normalized === "webp") return "webp";
-	if (normalized === "avif") return enableAvif ? "avif" : "webp";
-	return undefined;
+	if (!transforms || transforms.length === 0) {
+		throw new Error(
+			`ImageKit transforms 未配置，无法处理宽度为 ${width} 的图片`,
+		);
+	}
+	const entry = transforms.find((t) => t.width === width);
+	if (!entry) {
+		const available = transforms.map((t) => t.width).join(", ");
+		throw new Error(
+			`ImageKit 宽度 ${width} 不在 transforms 列表中。可用宽度: ${available}`,
+		);
+	}
+	return entry.transformRule;
 }
 
 /**
@@ -242,13 +196,14 @@ function inferFormatFromUrl(
  * 将原始图片 URL 转换为带 `tr:` 变换参数的 ImageKit URL。
  * 如果图片不需要 ImageKit 处理，则直接返回原始 URL。
  *
- * 变换参数构建优先级：
- * 1. `transformsByWidth` 中的自定义模板（按宽度匹配，或 `default` 键）
- * 2. 自动组合 `quality`、`fit`、`width`、`height`、`format`
+ * 根据目标宽度在 `transforms` 列表中查找对应的变换规则，
+ * 将完整的 transformRule 直接作为路径段插入 URL。
+ * 若宽度未在 transforms 中配置，则抛出错误。
  *
  * @param options     - Astro 图片变换选项
  * @param imageConfig - Astro 图片配置
  * @returns 处理后的图片 URL
+ * @throws 当目标宽度不在 transforms 配置中时抛出错误
  */
 function buildImageKitUrl(
 	options: ImageTransform,
@@ -258,49 +213,20 @@ function buildImageKitUrl(
 	const originalSrc = toSourceString(options.src);
 	if (!shouldUseImageKit(originalSrc, imageConfig)) return originalSrc;
 
+	const width = options.width
+		? Math.max(1, Math.round(options.width))
+		: undefined;
+
+	// 未指定宽度时不做变换，直接返回原始 URL
+	if (width == null) return originalSrc;
+
 	try {
+		const transformRule = findTransformRule(width, config.transforms);
+		const transformSegment = transformRule;
+
 		const parsed = new URL(originalSrc);
 		const segments = parsed.pathname.split("/").filter(Boolean);
-		const quality = normalizeQuality(options.quality, config.quality ?? 80);
-		const fit = normalizeFit(options.fit, config.fit);
-		const format = normalizeFormat(options.format, config.enableAvif === true);
 
-		const width = options.width
-			? Math.max(1, Math.round(options.width))
-			: undefined;
-		const height = options.height
-			? Math.max(1, Math.round(options.height))
-			: undefined;
-
-		const transformsByWidth = config.transformsByWidth || {};
-		const mappedTemplate =
-			(width ? transformsByWidth[String(width)] : undefined) ||
-			transformsByWidth.default;
-
-		let transformValue = "";
-		if (mappedTemplate && mappedTemplate.trim()) {
-			const template = mappedTemplate.trim().replace(/^tr:/i, "");
-			transformValue = template
-				.replace(/\{width\}/g, width ? String(width) : "")
-				.replace(/\{height\}/g, height ? String(height) : "")
-				.replace(/\{quality\}/g, String(quality))
-				.replace(/\{fit\}/g, fit)
-				.replace(/\{format\}/g, format || "")
-				.split(",")
-				.map((part) => part.trim())
-				.filter(Boolean)
-				.join(",");
-		}
-
-		if (!transformValue) {
-			const transformParts = [`q-${quality}`, `c-${fit}`];
-			if (width) transformParts.push(`w-${width}`);
-			if (height) transformParts.push(`h-${height}`);
-			if (format) transformParts.push(`f-${format}`);
-			transformValue = transformParts.join(",");
-		}
-
-		const transformSegment = `tr:${transformValue}`;
 		const transformIndex = findTransformSegmentIndex(segments);
 		if (transformIndex >= 0) {
 			segments[transformIndex] = transformSegment;
@@ -365,10 +291,6 @@ const imagekitExternalService: ExternalImageService<ImageKitServiceConfig> = {
 		const config = getServiceConfig(imageConfig);
 		if (validated.quality == null && typeof config.quality === "number") {
 			validated.quality = config.quality;
-		}
-
-		if (validated.format === "avif" && config.enableAvif !== true) {
-			validated.format = "webp";
 		}
 
 		return validated;

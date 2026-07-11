@@ -125,17 +125,11 @@ export function shouldAddNoReferrer(urlStr: string): boolean {
 	}
 }
 
-type RemoteImageFormat = "avif" | "webp" | "jpeg";
-
-type RemoteImageFit = "at_max" | "maintain_ratio" | "pad_resize" | "force";
-
 type BuildRemoteResponsiveImageOptions = {
 	widths?: number[];
 	sizes?: string;
 	layout?: string;
-	quality?: number;
 	formats?: ImageFormat[];
-	fit?: RemoteImageFit;
 	maxWidth?: number;
 	fallbackWidth?: number;
 };
@@ -208,22 +202,15 @@ export function shouldUseImageKitForUrl(urlStr: string): boolean {
 }
 
 /**
- * 是否启用 ImageKit 的 AVIF 转换
- * 免费账户通常不支持 AVIF，默认关闭
- */
-export function isImageKitAvifEnabled(): boolean {
-	return siteConfig.imageOptimization?.imagekit?.enableAvif === true;
-}
-
-/**
  * 获取远程图片默认响应式宽度列表
+ * 从 transforms 配置中提取所有宽度值，未配置时使用默认列表
  */
 export function getRemoteImageWidths(): number[] {
-	return (
-		siteConfig.imageOptimization?.imagekit?.widths || [
-			320, 480, 640, 800, 960, 1280, 1600,
-		]
-	);
+	const transforms = siteConfig.imageOptimization?.imagekit?.transforms;
+	if (transforms && transforms.length > 0) {
+		return transforms.map((t) => t.width).sort((a, b) => a - b);
+	}
+	return [320, 480, 640, 800, 960, 1280, 1600];
 }
 
 /**
@@ -241,51 +228,61 @@ export function getRemoteImageSizes(layout?: string): string {
 }
 
 /**
+ * 从 transforms 列表中按宽度查找对应的变换规则
+ */
+function findTransformRule(
+	width: number,
+	transforms?: { width: number; transformRule: string }[],
+): string {
+	if (!transforms || transforms.length === 0) {
+		throw new Error(
+			`ImageKit transforms 未配置，无法处理宽度为 ${width} 的图片`,
+		);
+	}
+	const entry = transforms.find((t) => t.width === width);
+	if (!entry) {
+		const available = transforms.map((t) => t.width).join(", ");
+		throw new Error(
+			`ImageKit 宽度 ${width} 不在 transforms 列表中。可用宽度: ${available}`,
+		);
+	}
+	return entry.transformRule;
+}
+
+/**
  * 基于 ImageKit 路径转换规则构造优化后的远程 URL
+ *
+ * 根据目标宽度在 transforms 列表中查找对应的变换规则，
+ * 将完整的 transformRule 直接作为路径段插入 URL。
+ * 若宽度未指定则返回原始 URL，若宽度未配置则抛出错误。
  */
 export function buildImageKitUrl(
 	urlStr: string,
 	options: {
 		width?: number;
 		height?: number;
-		format?: RemoteImageFormat;
-		quality?: number;
 		dpr?: 1 | 2;
-		fit?: RemoteImageFit;
 	} = {},
 ): string {
 	if (!shouldUseImageKitForUrl(urlStr)) {
 		return urlStr;
 	}
 
+	// 未指定宽度时不做变换
+	if (options.width == null) return urlStr;
+
 	const imagekit = siteConfig.imageOptimization?.imagekit;
-	const quality = Math.max(
-		1,
-		Math.min(100, options.quality ?? getImageQuality()),
+	const transformRule = findTransformRule(
+		Math.max(1, Math.round(options.width)),
+		imagekit?.transforms,
 	);
-	const fit = options.fit || imagekit?.fit || "at_max";
+	const transformSegment = sanitizeImageKitValue(transformRule);
 
 	try {
 		const parsed = new URL(urlStr);
 		const pathSegments = parsed.pathname.split("/").filter(Boolean);
 
-		const transformParts = [`q-${quality}`, `c-${fit}`];
-		if (options.width) {
-			transformParts.push(`w-${Math.max(1, Math.round(options.width))}`);
-		}
-		if (options.height) {
-			transformParts.push(`h-${Math.max(1, Math.round(options.height))}`);
-		}
-		if (options.dpr) {
-			transformParts.push(`dpr-${options.dpr}`);
-		}
-		if (options.format) {
-			transformParts.push(`f-${sanitizeImageKitValue(options.format)}`);
-		}
-
-		const transformSegment = `tr:${transformParts.join(",")}`;
 		const transformIndex = findImageKitTransformIndex(pathSegments);
-
 		if (transformIndex >= 0) {
 			pathSegments[transformIndex] = transformSegment;
 		} else {
@@ -306,15 +303,7 @@ export function buildImageKitUrl(
 /**
  * 生成远程响应式 srcset
  */
-export function buildImageKitSrcSet(
-	urlStr: string,
-	widths: number[],
-	options: {
-		format?: RemoteImageFormat;
-		quality?: number;
-		fit?: RemoteImageFit;
-	} = {},
-): string {
+export function buildImageKitSrcSet(urlStr: string, widths: number[]): string {
 	const validWidths = widths
 		.map((width) => Math.round(width))
 		.filter((width) => Number.isFinite(width) && width > 0)
@@ -324,12 +313,7 @@ export function buildImageKitSrcSet(
 
 	return validWidths
 		.map((width) => {
-			const transformed = buildImageKitUrl(urlStr, {
-				width,
-				format: options.format,
-				quality: options.quality,
-				fit: options.fit,
-			});
+			const transformed = buildImageKitUrl(urlStr, { width });
 			return `${transformed} ${width}w`;
 		})
 		.join(", ");
@@ -365,8 +349,6 @@ export function buildRemoteResponsiveImage(
 			: effectiveWidths.length > 0
 				? effectiveWidths[Math.floor(effectiveWidths.length / 2)]
 				: 960;
-	const quality = options.quality ?? getImageQuality();
-	const fit = options.fit;
 	const sizes = options.sizes || getRemoteImageSizes(options.layout);
 	const formats = options.formats || getImageFormats();
 
@@ -380,28 +362,18 @@ export function buildRemoteResponsiveImage(
 		};
 	}
 
-	const src = buildImageKitUrl(urlStr, { width: fallbackWidth, quality, fit });
+	const src = buildImageKitUrl(urlStr, { width: fallbackWidth });
 	const srcset =
 		effectiveWidths.length > 0
-			? buildImageKitSrcSet(urlStr, effectiveWidths, { quality, fit })
+			? buildImageKitSrcSet(urlStr, effectiveWidths)
 			: undefined;
 	const avifSrcSet =
-		isImageKitAvifEnabled() &&
-		formats.includes("avif") &&
-		effectiveWidths.length > 0
-			? buildImageKitSrcSet(urlStr, effectiveWidths, {
-					format: "avif",
-					quality,
-					fit,
-				})
+		formats.includes("avif") && effectiveWidths.length > 0
+			? buildImageKitSrcSet(urlStr, effectiveWidths)
 			: undefined;
 	const webpSrcSet =
 		formats.includes("webp") && effectiveWidths.length > 0
-			? buildImageKitSrcSet(urlStr, effectiveWidths, {
-					format: "webp",
-					quality,
-					fit,
-				})
+			? buildImageKitSrcSet(urlStr, effectiveWidths)
 			: undefined;
 
 	return {
@@ -423,8 +395,6 @@ export function buildRemoteLightboxImageUrl(
 	urlStr: string,
 	options: {
 		widths?: number[];
-		quality?: number;
-		fit?: RemoteImageFit;
 		width?: number;
 	} = {},
 ): string {
@@ -438,9 +408,5 @@ export function buildRemoteLightboxImageUrl(
 				? widths[widths.length - 1]
 				: 1600;
 
-	return buildImageKitUrl(urlStr, {
-		width,
-		quality: options.quality ?? getImageQuality(),
-		fit: options.fit,
-	});
+	return buildImageKitUrl(urlStr, { width });
 }

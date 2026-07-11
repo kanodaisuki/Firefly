@@ -13,7 +13,7 @@ interface Props {
 	alt?: string;
 }
 
-const { src, albumId, alt = "" } = Astro.props;
+const { src, alt = "" } = Astro.props;
 
 // LQIP 渐变占位
 const lqipProps = getLqipProps(src, undefined, true);
@@ -27,7 +27,7 @@ const effectiveDisplayWidths =
 const lightboxWidth =
 	allWidths.length > 0 ? allWidths[allWidths.length - 1] : 1600;
 
-// lightGallery 缩略图专用宽度，对应 siteConfig 中 transformsByWidth["100"]
+// lightGallery 缩略图专用宽度，对应 siteConfig 中 transforms 的 width: 100
 const LG_THUMB_WIDTH = 100;
 
 const useService = shouldUseImageKitForUrl(src);

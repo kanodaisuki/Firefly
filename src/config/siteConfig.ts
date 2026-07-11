@@ -250,26 +250,21 @@ export const siteConfig: SiteConfig = {
 			enabled: true,
 			domains: ["p.kksk.ltd"],
 			pathPrefix: "",
-			widths: [100, 320, 480, 640, 800, 1080, 1440, 1920, 2880, 3840],
-			// 宽度到转换参数模板映射（可选）
-			// key: 宽度，value: tr: 后参数串；支持占位符 {width} {height} {quality} {fit} {format}
-			// default 为未命中宽度时的兜底模板
-			transformsByWidth: {
-				default: "q-{quality},c-{fit},w-{width},h-{height},f-{format}",
-				"100": "tr:w-100,h-100,c-at_max", // 缩略图
-				"320": "tr:w-320,h-320,c-at_max",
-				"480": "tr:w-480,h-480,c-at_max",
-				"640": "tr:w-640,h-640,c-at_max",
-				"800": "tr:w-800,h-800,c-at_max",
-				"1080": "tr:w-1080,h-1080,c-at_max",
-				"1440": "tr:w-1440,h-1440,c-at_max",
-				"1920": "tr:w-1920,h-1920,c-at_max",
-				"2880": "tr:w-2880,h-2880,c-at_max",
-				"3840": "tr:w-3840,h-3840,c-at_max",
-			},
+			// 宽度到转换规则的映射列表
+			// transformRule 为完整的 tr: 转换规则，直接作为 URL 路径段插入
+			transforms: [
+				{ width: 100, transformRule: "tr:w-100,h-100,c-at_max" }, // 缩略图
+				{ width: 320, transformRule: "tr:w-320,h-320,c-at_max" },
+				{ width: 480, transformRule: "tr:w-480,h-480,c-at_max" },
+				{ width: 640, transformRule: "tr:w-640,h-640,c-at_max" },
+				{ width: 800, transformRule: "tr:w-800,h-800,c-at_max" },
+				{ width: 1080, transformRule: "tr:w-1080,h-1080,c-at_max" },
+				{ width: 1440, transformRule: "tr:w-1440,h-1440,c-at_max" },
+				{ width: 1920, transformRule: "tr:w-1920,h-1920,c-at_max" },
+				{ width: 2880, transformRule: "tr:w-2880,h-2880,c-at_max" },
+				{ width: 3840, transformRule: "tr:w-3840,h-3840,c-at_max" },
+			],
 			sizes: "(max-width: 768px) 100vw, (max-width: 1200px) 90vw, 1200px",
-			fit: "at_max",
-			enableAvif: false,
 			defaultWidth: 1600,
 			defaultHeight: 900,
 		},
