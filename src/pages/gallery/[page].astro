@@ -62,7 +62,11 @@ const allAlbums = [...galleryConfig.albums]
 const totalPages = Math.max(1, Math.ceil(allAlbums.length / albumsPerPage));
 const currentPage = Number.parseInt(Astro.params.page || "", 10);
 
-if (!Number.isInteger(currentPage) || currentPage < 2 || currentPage > totalPages) {
+if (
+	!Number.isInteger(currentPage) ||
+	currentPage < 2 ||
+	currentPage > totalPages
+) {
 	return Astro.redirect("/404/");
 }
 

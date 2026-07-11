@@ -38,7 +38,8 @@ const flowMaxColumns = Math.max(1, indexLayout.flowMaxColumns || 2);
 const flowGap = indexLayout.flowGap || 16;
 const adaptiveAspectRatio = indexLayout.adaptiveAspectRatio ?? true;
 const showFilterControls =
-	albums.length > 0 && (enableSearch || (enableTagFilter && allTags.length > 0));
+	albums.length > 0 &&
+	(enableSearch || (enableTagFilter && allTags.length > 0));
 ---
 
 <div
