@@ -2,7 +2,10 @@
 import { getImage } from "astro:assets";
 import I18nKey from "@/i18n/i18nKey";
 import { i18n } from "@/i18n/translation";
-import { shouldUseImageKitForUrl } from "@/utils/image-utils";
+import {
+	getRemoteImageWidths,
+	shouldUseImageKitForUrl,
+} from "@/utils/image-utils";
 import { getLqipProps } from "@/utils/lqip-utils";
 import { url } from "@/utils/url-utils";
 
@@ -38,10 +41,10 @@ const albumPath = `/gallery/${id}/`;
 const detailPath = returnTo
 	? `${albumPath}?from=${encodeURIComponent(returnTo)}`
 	: albumPath;
-
+const allWidths = getRemoteImageWidths();
 const optimizedCover =
 	cover && shouldUseImageKitForUrl(cover)
-		? await getImage({ src: cover, inferSize: true, width: 800 })
+		? await getImage({ src: cover, inferSize: true, widths: allWidths })
 		: null;
 ---
 
@@ -62,6 +65,7 @@ const optimizedCover =
           class="w-full h-full object-cover pointer-events-none opacity-0 transition-all duration-500 ease-out group-hover:scale-105"
           loading="lazy"
           decoding="async"
+          sizes="auto"
         />
       </>
     ) : (

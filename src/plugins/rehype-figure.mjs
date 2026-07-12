@@ -3,7 +3,6 @@ import { visit } from "unist-util-visit";
 import {
 	buildImageKitSrcSet,
 	buildImageKitUrl,
-	getRemoteImageSizes,
 	getRemoteImageWidths,
 	shouldAddNoReferrer,
 	shouldUseImageKitForUrl,
@@ -41,7 +40,9 @@ export default function rehypeFigure() {
 				const fallbackWidth = widths[Math.floor(widths.length / 2)] || 960;
 				imgProps.src = buildImageKitUrl(src, { width: fallbackWidth });
 				imgProps.srcset = buildImageKitSrcSet(src, widths);
-				imgProps.sizes = getRemoteImageSizes();
+
+				/**文章页面图片sizes */
+				imgProps.sizes = "auto";
 				// lightGallery：最大宽度作灯箱大图，最小宽度作缩略图
 				const maxW = widths[widths.length - 1];
 				const minW = widths[0];

@@ -159,10 +159,7 @@ function findInsertIndexByPathPrefix(
 	pathPrefix?: string,
 ): number {
 	if (!pathPrefix) return 0;
-	const normalizedPrefix = sanitizeImageKitValue(pathPrefix).replace(
-		/^\/+|\/+$/g,
-		"",
-	);
+	const normalizedPrefix = pathPrefix.replace(/^\/+|\/+$/g, "");
 	if (!normalizedPrefix) return 0;
 
 	const prefixSegments = normalizedPrefix.split("/").filter(Boolean);
@@ -175,10 +172,6 @@ function findInsertIndexByPathPrefix(
 	);
 
 	return isPrefixMatched ? prefixSegments.length : 0;
-}
-
-function sanitizeImageKitValue(value: string): string {
-	return value.replace(/,/g, "").trim();
 }
 
 /**
@@ -285,7 +278,6 @@ export function buildImageKitUrl(
 		Math.max(1, Math.round(options.width)),
 		imagekit?.transforms,
 	);
-	const transformSegment = sanitizeImageKitValue(transformRule);
 
 	try {
 		const parsed = new URL(urlStr);
@@ -293,13 +285,13 @@ export function buildImageKitUrl(
 
 		const transformIndex = findImageKitTransformIndex(pathSegments);
 		if (transformIndex >= 0) {
-			pathSegments[transformIndex] = transformSegment;
+			pathSegments[transformIndex] = transformRule;
 		} else {
 			const insertIndex = findInsertIndexByPathPrefix(
 				pathSegments,
 				imagekit?.pathPrefix,
 			);
-			pathSegments.splice(insertIndex, 0, transformSegment);
+			pathSegments.splice(insertIndex, 0, transformRule);
 		}
 
 		parsed.pathname = `/${pathSegments.join("/")}`;
