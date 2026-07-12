@@ -144,10 +144,14 @@ function resolveInsertIndexByPrefix(
 /**
  * 从 transforms 列表中按宽度查找对应的变换规则
  *
+ * 优先精确匹配，若无精确匹配则选择不小于目标宽度的最小可用宽度
+ * （即向上取整），确保图片清晰度不会因缩放而损失。
+ * 若目标宽度超过所有可用宽度，则使用最大宽度。
+ *
  * @param width      - 目标图片宽度
  * @param transforms - 变换规则列表
  * @returns 匹配的 transformRule 字符串
- * @throws 当宽度未在 transforms 中配置时抛出错误
+ * @throws 当 transforms 未配置或为空时抛出错误
  */
 function findTransformRule(
 	width: number,
@@ -158,14 +162,18 @@ function findTransformRule(
 			`ImageKit transforms 未配置，无法处理宽度为 ${width} 的图片`,
 		);
 	}
-	const entry = transforms.find((t) => t.width === width);
-	if (!entry) {
-		const available = transforms.map((t) => t.width).join(", ");
-		throw new Error(
-			`ImageKit 宽度 ${width} 不在 transforms 列表中。可用宽度: ${available}`,
-		);
-	}
-	return entry.transformRule;
+	// 精确匹配
+	const exact = transforms.find((t) => t.width === width);
+	if (exact) return exact.transformRule;
+
+	// 向上取整：找不小于目标宽度的最小宽度
+	const sorted = [...transforms].sort((a, b) => a.width - b.width);
+	const ceil = sorted.find((t) => t.width >= width);
+	if (ceil) return ceil.transformRule;
+
+	// 目标宽度超过所有配置，使用最大宽度
+	const max = sorted[sorted.length - 1];
+	return max.transformRule;
 }
 
 /**
@@ -198,12 +206,11 @@ function inferFormatFromUrl(
  *
  * 根据目标宽度在 `transforms` 列表中查找对应的变换规则，
  * 将完整的 transformRule 直接作为路径段插入 URL。
- * 若宽度未在 transforms 中配置，则抛出错误。
+ * 若无精确匹配，自动向上取整到最近的可用宽度。
  *
  * @param options     - Astro 图片变换选项
  * @param imageConfig - Astro 图片配置
  * @returns 处理后的图片 URL
- * @throws 当目标宽度不在 transforms 配置中时抛出错误
  */
 function buildImageKitUrl(
 	options: ImageTransform,

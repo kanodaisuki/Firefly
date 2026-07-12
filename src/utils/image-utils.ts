@@ -204,6 +204,7 @@ export function shouldUseImageKitForUrl(urlStr: string): boolean {
 /**
  * 获取远程图片默认响应式宽度列表
  * 从 transforms 配置中提取所有宽度值，未配置时使用默认列表
+ * 宽度排序为升序，确保响应式 srcset 中的宽度顺序正确
  */
 export function getRemoteImageWidths(): number[] {
 	const transforms = siteConfig.imageOptimization?.imagekit?.transforms;
@@ -229,6 +230,10 @@ export function getRemoteImageSizes(layout?: string): string {
 
 /**
  * 从 transforms 列表中按宽度查找对应的变换规则
+ *
+ * 优先精确匹配，若无精确匹配则选择不小于目标宽度的最小可用宽度
+ * （即向上取整），确保图片清晰度不会因缩放而损失。
+ * 若目标宽度超过所有可用宽度，则使用最大宽度。
  */
 function findTransformRule(
 	width: number,
@@ -239,14 +244,18 @@ function findTransformRule(
 			`ImageKit transforms 未配置，无法处理宽度为 ${width} 的图片`,
 		);
 	}
-	const entry = transforms.find((t) => t.width === width);
-	if (!entry) {
-		const available = transforms.map((t) => t.width).join(", ");
-		throw new Error(
-			`ImageKit 宽度 ${width} 不在 transforms 列表中。可用宽度: ${available}`,
-		);
-	}
-	return entry.transformRule;
+	// 精确匹配
+	const exact = transforms.find((t) => t.width === width);
+	if (exact) return exact.transformRule;
+
+	// 向上取整：找不小于目标宽度的最小宽度
+	const sorted = [...transforms].sort((a, b) => a.width - b.width);
+	const ceil = sorted.find((t) => t.width >= width);
+	if (ceil) return ceil.transformRule;
+
+	// 目标宽度超过所有配置，使用最大宽度
+	const max = sorted[sorted.length - 1];
+	return max.transformRule;
 }
 
 /**
