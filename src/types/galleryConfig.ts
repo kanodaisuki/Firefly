@@ -12,16 +12,9 @@ export type GalleryAlbum = {
 	comment?: boolean; // 是否启用评论（可选，默认 false）
 };
 
-export type GalleryIndexLayoutMode = "grid" | "flow";
-
 export type GalleryIndexLayoutConfig = {
-	mode?: GalleryIndexLayoutMode; // 首页布局模式：grid(固定网格) / flow(流式布局)
 	enableSearch?: boolean; // 是否启用相册搜索，默认 true
 	enableTagFilter?: boolean; // 是否启用标签筛选，默认 true
-	flowMinColumnWidth?: number; // 流式布局最小列宽(px)，默认 280
-	flowMaxColumns?: number; // 流式布局最大列数，默认 2
-	flowGap?: number; // 流式布局列间距(px)，默认 16
-	adaptiveAspectRatio?: boolean; // 根据封面横竖屏自动使用 3:2/2:3 比例，默认 true
 };
 
 export type GalleryPaginationConfig = {

@@ -30,13 +30,8 @@ const { title, description, albums, returnTo } = Astro.props;
 const allTags = [...new Set(albums.flatMap((a) => a.tags || []))].sort();
 
 const indexLayout = galleryConfig.indexLayout || {};
-const isFlowLayout = indexLayout.mode === "flow";
 const enableSearch = indexLayout.enableSearch ?? true;
 const enableTagFilter = indexLayout.enableTagFilter ?? true;
-const flowMinColumnWidth = indexLayout.flowMinColumnWidth || 260;
-const flowMaxColumns = Math.max(1, indexLayout.flowMaxColumns || 2);
-const flowGap = indexLayout.flowGap || 16;
-const adaptiveAspectRatio = indexLayout.adaptiveAspectRatio ?? true;
 const showFilterControls =
 	albums.length > 0 &&
 	(enableSearch || (enableTagFilter && allTags.length > 0));
@@ -106,19 +101,7 @@ const showFilterControls =
 		<!-- 相册卡片网格 -->
 		{albums.length > 0 ? (
 			<>
-				<div
-					class:list={[
-						"my-4",
-						isFlowLayout
-							? "gallery-flow-layout"
-							: "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4",
-					]}
-					style={
-						isFlowLayout
-							? `--gallery-flow-min-width: ${flowMinColumnWidth}px; --gallery-flow-max-columns: ${flowMaxColumns}; --gallery-flow-gap: ${flowGap}px;`
-							: undefined
-					}
-				>
+				<div class="my-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
 					{albums.map((album) => (
 						<AlbumCard
 							id={album.id}
@@ -130,7 +113,6 @@ const showFilterControls =
 							tags={album.tags}
 							photoCount={album.photoCount}
 							encrypted={!!album.password}
-							adaptiveAspectRatio={isFlowLayout && adaptiveAspectRatio}
 							returnTo={returnTo}
 						/>
 					))}
@@ -151,61 +133,9 @@ const showFilterControls =
 </div>
 
 <style is:inline>
-	.gallery-flow-layout {
-		column-width: var(--gallery-flow-min-width, 260px);
-		column-gap: var(--gallery-flow-gap, 16px);
-		max-width: calc(
-			var(--gallery-flow-max-columns, 2) * var(--gallery-flow-min-width, 260px) +
-				(var(--gallery-flow-max-columns, 2) - 1) * var(--gallery-flow-gap, 16px)
-		);
-		margin-inline: auto;
-	}
-
-	.gallery-flow-layout > .album-card {
-		display: block;
-		width: 100%;
-		margin: 0 0 var(--gallery-flow-gap, 16px);
-		break-inside: avoid;
-		-webkit-column-break-inside: avoid;
-		page-break-inside: avoid;
-	}
-
-	.gallery-flow-layout .album-cover[data-adaptive-ratio="true"][data-orientation="landscape"] {
-		aspect-ratio: 3 / 2;
-	}
-
-	.gallery-flow-layout .album-cover[data-adaptive-ratio="true"][data-orientation="portrait"] {
-		aspect-ratio: 2 / 3;
-	}
 </style>
 
 <script slot="head" is:inline define:vars={{ enableSearch, enableTagFilter }}>
-	const setCoverAspectByImage = (coverEl) => {
-		const img = coverEl.querySelector("img");
-		if (!img) return;
-
-		const applyRatio = () => {
-			if (!img.naturalWidth || !img.naturalHeight) return;
-
-			const isPortrait = img.naturalHeight > img.naturalWidth;
-			coverEl.dataset.orientation = isPortrait ? "portrait" : "landscape";
-		};
-
-		if (img.complete) {
-			applyRatio();
-		} else if (img.dataset.orientationBound !== "true") {
-			img.addEventListener("load", applyRatio, { once: true });
-			img.dataset.orientationBound = "true";
-		}
-	};
-
-	const updateAlbumCoverRatios = (root = document) => {
-		const covers = root.querySelectorAll(
-			".album-cover[data-adaptive-ratio='true']",
-		);
-		covers.forEach((coverEl) => setCoverAspectByImage(coverEl));
-	};
-
 	if (!customElements.get("gallery-filter")) {
 		class GalleryFilter extends HTMLElement {
 			selectedTag = enableTagFilter ? "all" : "";
@@ -220,8 +150,6 @@ const showFilterControls =
 				if (input && enableSearch) {
 					input.addEventListener("input", () => this.applyFilters());
 				}
-
-				updateAlbumCoverRatios();
 			}
 
 			disconnectedCallback() {
@@ -299,19 +227,9 @@ const showFilterControls =
 					emptyEl.classList.toggle("hidden", hasVisible);
 					emptyEl.classList.toggle("flex", !hasVisible);
 				}
-
-				updateAlbumCoverRatios(container);
 			}
 		}
 		customElements.define("gallery-filter", GalleryFilter);
 	}
 
-	if (document.readyState === "loading") {
-		document.addEventListener("DOMContentLoaded", () => updateAlbumCoverRatios(), {
-			once: true,
-		});
-	} else {
-		updateAlbumCoverRatios();
-	}
-	document.addEventListener("astro:page-load", () => updateAlbumCoverRatios());
 </script>

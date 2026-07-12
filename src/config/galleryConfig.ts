@@ -40,30 +40,13 @@ export const galleryConfig: GalleryConfig = {
 	// 值越小列数越多，值越大列数越少
 	columnWidth: 240,
 
-	// 相册首页布局配置
+	// 相册首页布局配置（统一使用 grid 固定网格 1/2/3 列自适应布局）
 	indexLayout: {
-		// grid: 固定网格（1/2/3 列）
-		// flow: 流式布局（自动填充列）
-		mode: "grid",
-
 		// 是否启用相册搜索框
 		enableSearch: false,
 
 		// 是否启用标签筛选
 		enableTagFilter: false,
-
-		// flow 模式下的最小卡片宽度(px)
-		flowMinColumnWidth: 320,
-
-		// flow 模式下的最大列数
-		flowMaxColumns: 4,
-
-		// flow 模式下的卡片间距(px)
-		flowGap: 16,
-
-		// 是否根据封面横竖图自动切换卡片比例
-		// 横图: 3:2，竖图: 2:3
-		adaptiveAspectRatio: true,
 	},
 
 	// 相册分页配置

@@ -16,7 +16,6 @@ interface Props {
 	tags?: string[];
 	photoCount: number;
 	encrypted?: boolean;
-	adaptiveAspectRatio?: boolean;
 	returnTo?: string;
 }
 
@@ -52,7 +51,7 @@ const optimizedCover =
   class="album-card group relative block overflow-hidden rounded-xl transition-all duration-300 hover:shadow-lg hover:scale-[1.02]"
 >
   <!-- Cover Image -->
-  <div class="aspect-4/3 relative overflow-hidden">
+  <div class="aspect-2/3 relative overflow-hidden">
     {cover ? (
       <>
         <div class="lqip-placeholder absolute inset-0 pointer-events-none" style={lqipProps.style} aria-hidden="true"></div>
