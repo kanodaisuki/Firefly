@@ -42,7 +42,7 @@ export default function rehypeFigure() {
 				imgProps.srcset = buildImageKitSrcSet(src, widths);
 
 				/**文章页面图片sizes */
-				imgProps.sizes = "auto";
+				imgProps.sizes = "(max-width: 768px) 100vw, 1080px";
 				// lightGallery：最大宽度作灯箱大图，最小宽度作缩略图
 				const maxW = widths[widths.length - 1];
 				const minW = widths[0];
