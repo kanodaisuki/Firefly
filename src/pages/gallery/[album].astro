@@ -13,6 +13,7 @@ import {
 	getSortedAlbums,
 	scanAlbumPhotos,
 } from "@/utils/gallery-utils";
+import { getOgImagePath } from "@/utils/og-utils";
 import { getRemoteImageWidths, shouldUseImageKitForUrl } from "@/utils/image-utils";
 import { getLqipProps } from "@/utils/lqip-utils";
 import { url } from "@/utils/url-utils";
@@ -58,7 +59,7 @@ const optimizedCover =
 const sizes = "(max-width: 768px) 100vw, (max-width: 1600px) 80vw, 1300px";
 ---
 
-<MainGridLayout title={albumMeta.name} description={albumMeta.description || ""}>
+<MainGridLayout title={albumMeta.name} description={albumMeta.description || ""} ogImage={getOgImagePath("galleryAlbum", albumMeta.id)}>
   <!-- 相册封面横幅 -->
   <div class="w-full rounded-(--radius-large) overflow-hidden relative">
     {cover ? (

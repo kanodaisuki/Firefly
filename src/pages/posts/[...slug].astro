@@ -10,6 +10,7 @@ import I18nKey from "@i18n/i18nKey";
 import { i18n } from "@i18n/translation";
 import MainGridLayout from "@layouts/MainGridLayout.astro";
 import { getRelatedPosts, getSortedPosts } from "@utils/content-utils";
+import { getOgImagePath } from "@utils/og-utils";
 import {
 	getFileDirFromPath,
 	getPostUrlBySlug,
@@ -138,6 +139,7 @@ const relatedPosts = await getRelatedPosts(entry, 5);
   lang={entry.data.lang}
   setOGTypeArticle={true}
   postSlug={entry.id}
+  ogImage={getOgImagePath("posts", removeFileExtension(entry.id))}
   postCategory={entry.data.category || undefined}
   headings={headings}
   bannerPostMeta={bannerPostMeta}

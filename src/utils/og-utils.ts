@@ -1,16 +1,21 @@
-import type { CollectionEntry } from "astro:content";
-import { getCollection } from "astro:content";
+/**
+ * OpenGraph 图片生成通用模块
+ *
+ * 提供所有页面类型共用的 OG 图片渲染能力（satori + sharp），
+ * 以及配置辅助函数（是否启用、图片路径、元数据覆盖解析）。
+ *
+ * 设计要点：
+ * - 所有页面共用同一套 satori 模板，仅通过 title/description/footerRight 参数化，保证视觉一致。
+ * - 仅生成 siteConfig.lang 对应语言的 OG 图片，不为每种语言分别生成。
+ */
 import * as fs from "node:fs";
-import type { APIContext, GetStaticPaths } from "astro";
 import satori from "satori";
-import { removeFileExtension } from "@/utils/url-utils";
-
-import { profileConfig } from "../../config/profileConfig";
-import { siteConfig } from "../../config/siteConfig";
+import { profileConfig, siteConfig } from "@/config";
 
 type Weight = 100 | 200 | 300 | 400 | 500 | 600 | 700 | 800 | 900;
 
 type FontStyle = "normal" | "italic";
+
 interface FontOptions {
 	data: Buffer | ArrayBuffer;
 	name: string;
@@ -18,29 +23,78 @@ interface FontOptions {
 	style?: FontStyle;
 	lang?: string;
 }
-export const prerender = true;
 
-export const getStaticPaths: GetStaticPaths = async () => {
-	if (!siteConfig.post.generateOgImages) {
-		return [];
+/** 受支持的 OG 页面类型（与 GenerateOgImagesConfig 的子键对应，排除总开关 enable） */
+export type OgPageKey =
+	| "index"
+	| "posts"
+	| "about"
+	| "guestbook"
+	| "friends"
+	| "gallery"
+	| "galleryAlbum";
+
+/* -------------------------------------------------------------------------- */
+/* 配置辅助                                                                    */
+/* -------------------------------------------------------------------------- */
+
+/** 判断某页面类型的 OG 图片是否启用（总开关 && 子开关） */
+export function isOgEnabled(pageKey: OgPageKey): boolean {
+	const cfg = siteConfig.generateOgImages;
+	return !!cfg?.enable && !!cfg[pageKey]?.enable;
+}
+
+/**
+ * 构建某页面类型的 OG 图片相对路径（如 `/og/posts/hello.png`）。
+ * 未启用或缺少必要 slug 时返回 undefined。
+ */
+export function getOgImagePath(
+	pageKey: OgPageKey,
+	slug?: string,
+): string | undefined {
+	if (!isOgEnabled(pageKey)) return undefined;
+	switch (pageKey) {
+		case "index":
+			return "/og/index.png";
+		case "about":
+			return "/og/about.png";
+		case "guestbook":
+			return "/og/guestbook.png";
+		case "friends":
+			return "/og/friends.png";
+		case "gallery":
+			return "/og/gallery.png";
+		case "posts":
+			return slug ? `/og/posts/${slug}.png` : undefined;
+		case "galleryAlbum":
+			return slug ? `/og/gallery/${slug}.png` : undefined;
 	}
+}
 
-	const allPosts = await getCollection("posts");
-	const publishedPosts = allPosts.filter((post) => !post.data.draft);
+/**
+ * 解析某页面类型最终的 OG 元数据：meta 覆盖页面默认值（meta ?? default）。
+ */
+export function resolveOgMeta(
+	pageKey: OgPageKey,
+	defaults: { title: string; description?: string },
+): { title: string; description?: string } {
+	const meta = siteConfig.generateOgImages?.[pageKey]?.meta;
+	return {
+		title: meta?.title ?? defaults.title,
+		description: meta?.description ?? defaults.description,
+	};
+}
 
-	return publishedPosts.map((post) => {
-		// 将 id 转换为 slug（移除扩展名）以匹配路由参数
-		const slug = removeFileExtension(post.id);
-		return {
-			params: { slug: `${slug}.png` },
-			props: { post },
-		};
-	});
-};
+/* -------------------------------------------------------------------------- */
+/* 字体加载（Google Fonts, 模块级缓存）                                         */
+/* -------------------------------------------------------------------------- */
 
 let fontCache: { regular: Buffer | null; bold: Buffer | null } | null = null;
 
-async function fetchNotoSansSCFonts() {
+async function fetchNotoSansSCFonts(): Promise<{
+	regular: Buffer | null;
+	bold: Buffer | null;
+}> {
 	if (fontCache) return fontCache;
 	try {
 		const cssResp = await fetch(
@@ -94,51 +148,63 @@ async function fetchNotoSansSCFonts() {
 	}
 }
 
-export async function GET({
-	props,
-}: APIContext<{ post: CollectionEntry<"posts"> }>) {
-	const { post } = props;
+/* -------------------------------------------------------------------------- */
+/* 头像 / 图标加载（从磁盘读取，小文件）                                        */
+/* -------------------------------------------------------------------------- */
 
-	// Try to fetch fonts from Google Fonts (woff2) at runtime.
-	const { regular: fontRegular, bold: fontBold } = await fetchNotoSansSCFonts();
-
-	// Avatar + icon: still read from disk (small assets)
-	let avatarBase64: string;
-
+function loadAvatarBase64(): string {
 	// 检查头像是否为 URL
 	if (profileConfig.avatar?.startsWith("http")) {
-		// 如果是 URL，直接使用
-		avatarBase64 = profileConfig.avatar;
-	} else {
-		// 如果是本地路径，从 public 目录读取
-		const avatarPath = profileConfig.avatar?.startsWith("/")
-			? `./public${profileConfig.avatar}`
-			: `./src/${profileConfig.avatar}`;
-		const avatarBuffer = fs.readFileSync(avatarPath);
-		avatarBase64 = `data:image/png;base64,${avatarBuffer.toString("base64")}`;
+		return profileConfig.avatar;
 	}
+	// 本地路径："/" 开头取 public，否则取 src
+	const avatarPath = profileConfig.avatar?.startsWith("/")
+		? `./public${profileConfig.avatar}`
+		: `./src/${profileConfig.avatar}`;
+	const avatarBuffer = fs.readFileSync(avatarPath);
+	return `data:image/png;base64,${avatarBuffer.toString("base64")}`;
+}
 
+function loadIconBase64(): string {
 	let iconPath = "./public/favicon/favicon-dark-192.png";
 	if (siteConfig.favicon.length > 0) {
 		iconPath = `./public${siteConfig.favicon[0].src}`;
 	}
 	const iconBuffer = fs.readFileSync(iconPath);
-	const iconBase64 = `data:image/png;base64,${iconBuffer.toString("base64")}`;
+	return `data:image/png;base64,${iconBuffer.toString("base64")}`;
+}
+
+/* -------------------------------------------------------------------------- */
+/* 统一 OG 图片渲染                                                            */
+/* -------------------------------------------------------------------------- */
+
+export interface OgRenderOptions {
+	/** 主标题（必填） */
+	title: string;
+	/** 副标题/描述（可选，显示在主标题下方） */
+	description?: string;
+	/** 页脚右侧文本（可选，如发布日期、相册日期/地点、站点副标题） */
+	footerRight?: string;
+}
+
+/**
+ * 渲染 OG 图片（1200x630 PNG）。所有页面类型共用此实现。
+ * 返回 PNG 字节数组，供端点直接作为 Response body 返回。
+ */
+export async function renderOgImage(
+	opts: OgRenderOptions,
+): Promise<Uint8Array<ArrayBuffer>> {
+	const { title, description, footerRight } = opts;
+
+	const { regular: fontRegular, bold: fontBold } = await fetchNotoSansSCFonts();
+	const avatarBase64 = loadAvatarBase64();
+	const iconBase64 = loadIconBase64();
 
 	const hue = siteConfig.themeColor.hue;
 	const primaryColor = `hsl(${hue}, 90%, 65%)`;
 	const textColor = "hsl(0, 0%, 95%)";
-
 	const subtleTextColor = `hsl(${hue}, 10%, 75%)`;
 	const backgroundColor = `hsl(${hue}, 15%, 12%)`;
-
-	const pubDate = post.data.published.toLocaleDateString("en-US", {
-		year: "numeric",
-		month: "short",
-		day: "numeric",
-	});
-
-	const description = post.data.description;
 
 	const template = {
 		type: "div",
@@ -187,7 +253,6 @@ export async function GET({
 						],
 					},
 				},
-
 				{
 					type: "div",
 					props: {
@@ -235,7 +300,7 @@ export async function GET({
 													WebkitLineClamp: 3,
 													WebkitBoxOrient: "vertical",
 												},
-												children: post.data.title,
+												children: title,
 											},
 										},
 									],
@@ -304,11 +369,11 @@ export async function GET({
 									],
 								},
 							},
-							{
+							footerRight && {
 								type: "div",
 								props: {
 									style: { fontSize: "28px", color: subtleTextColor },
-									children: pubDate,
+									children: footerRight,
 								},
 							},
 						],
@@ -345,10 +410,20 @@ export async function GET({
 	const sharp = (await import("sharp")).default;
 	const png = await sharp(Buffer.from(svg)).png().toBuffer();
 
-	return new Response(new Uint8Array(png), {
-		headers: {
-			"Content-Type": "image/png",
-			"Cache-Control": "public, max-age=31536000, immutable",
-		},
-	});
+	// sharp 返回 Node Buffer（底层为 ArrayBuffer）；显式构造 ArrayBuffer 视图
+	// 以兼容 TS6 收紧后的 BodyInit/BufferSource 类型要求
+	return new Uint8Array(
+		png.buffer as ArrayBuffer,
+		png.byteOffset,
+		png.byteLength,
+	);
 }
+
+/* -------------------------------------------------------------------------- */
+/* 端点通用响应头                                                              */
+/* -------------------------------------------------------------------------- */
+
+export const ogImageResponseHeaders = {
+	"Content-Type": "image/png",
+	"Cache-Control": "public, max-age=31536000, immutable",
+};

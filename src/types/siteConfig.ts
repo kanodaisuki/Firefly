@@ -25,6 +25,37 @@ export type Favicon = {
 	sizes?: string;
 };
 
+// OpenGraph 图片生成 - 单个页面类型的配置
+export type OgImagePageConfig = {
+	// 是否为该页面类型生成 OG 图片
+	enable: boolean;
+	// 额外提供的 OG 元数据（覆盖页面默认值，留空则使用页面默认元数据）
+	meta?: {
+		title?: string;
+		description?: string;
+	};
+};
+
+// OpenGraph 图片生成配置（总开关 + 各页面类型开关）
+export type GenerateOgImagesConfig = {
+	// 总开关，false 时不为任何页面生成 OG 图片
+	enable: boolean;
+	// 首页
+	index: OgImagePageConfig;
+	// 文章详情页
+	posts: OgImagePageConfig;
+	// 关于页
+	about: OgImagePageConfig;
+	// 留言板
+	guestbook: OgImagePageConfig;
+	// 友链页
+	friends: OgImagePageConfig;
+	// 相册列表页
+	gallery: OgImagePageConfig;
+	// 相册详情页
+	galleryAlbum: OgImagePageConfig;
+};
+
 export type SiteConfig = {
 	title: string;
 	subtitle: string;
@@ -139,9 +170,10 @@ export type SiteConfig = {
 		outdatedThreshold?: number;
 		// 是否显示分享海报按钮
 		sharePoster?: boolean;
-		// OpenGraph图片功能
-		generateOgImages: boolean;
 	};
+
+	// OpenGraph 图片生成配置（总开关 + 各页面类型开关）
+	generateOgImages: GenerateOgImagesConfig;
 
 	// bangumi配置
 	bangumi?: {

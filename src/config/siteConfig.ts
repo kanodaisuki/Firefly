@@ -184,8 +184,29 @@ export const siteConfig: SiteConfig = {
 		outdatedThreshold: 30,
 		// 是否开启分享海报生成功能
 		sharePoster: true,
-		// OpenGraph图片功能，生产环境自动开启，本地调试时关闭以提升构建速度
-		generateOgImages: process.env.NODE_ENV === "production",
+	},
+
+	// OpenGraph 图片生成配置
+	// 总开关 enable 为 false 时，不为任何页面生成 OG 图片
+	// 各子项控制对应页面类型是否生成 OG 图片；meta 可选，用于覆盖页面默认的标题/描述
+	generateOgImages: {
+		// 是否启用 OpenGraph 图片功能（总开关）
+		// 生产环境自动开启，本地调试时关闭以提升构建速度
+		enable: process.env.NODE_ENV === "production",
+		// 首页
+		index: { enable: true },
+		// 文章详情页
+		posts: { enable: true },
+		// 关于页
+		about: { enable: true },
+		// 留言板
+		guestbook: { enable: true },
+		// 友链页
+		friends: { enable: true },
+		// 相册列表页
+		gallery: { enable: true },
+		// 相册详情页
+		galleryAlbum: { enable: true },
 	},
 
 	// bangumi配置
