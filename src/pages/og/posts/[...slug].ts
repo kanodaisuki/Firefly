@@ -33,7 +33,7 @@ export async function GET({
 }: APIContext<{ post: CollectionEntry<"posts"> }>): Promise<Response> {
 	const { post } = props;
 
-	const pubDate = post.data.published.toLocaleDateString("en-US", {
+	const pubDate = post.data.published.toLocaleDateString("zh", {
 		year: "numeric",
 		month: "short",
 		day: "numeric",

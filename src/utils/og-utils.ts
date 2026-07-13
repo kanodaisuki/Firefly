@@ -153,23 +153,54 @@ async function fetchNotoSansSCFonts(): Promise<{
 /* -------------------------------------------------------------------------- */
 
 function loadAvatarBase64(): string {
-	// 检查头像是否为 URL
+	// 远程 URL 直接返回
 	if (profileConfig.avatar?.startsWith("http")) {
 		return profileConfig.avatar;
 	}
+
+	if (!profileConfig.avatar) {
+		throw new Error(
+			"[OG 图片生成] 未配置头像！请在 src/config/profileConfig.ts 中设置 avatar 字段。",
+		);
+	}
+
 	// 本地路径："/" 开头取 public，否则取 src
-	const avatarPath = profileConfig.avatar?.startsWith("/")
+	const avatarPath = profileConfig.avatar.startsWith("/")
 		? `./public${profileConfig.avatar}`
 		: `./src/${profileConfig.avatar}`;
-	const avatarBuffer = fs.readFileSync(avatarPath);
+
+	// 统一使用 PNG 格式（satori 仅支持标准 Web 图片格式）
+	const pngPath = avatarPath.endsWith(".png")
+		? avatarPath
+		: avatarPath.replace(/\.[^.]+$/, ".png");
+
+	if (!fs.existsSync(pngPath)) {
+		throw new Error(
+			`[OG 图片生成] 缺少头像 PNG 资源！\n` +
+				`请将 PNG 格式的头像放到: ${pngPath.replace("./", "")}\n` +
+				`原始配置路径: ${profileConfig.avatar}`,
+		);
+	}
+
+	const avatarBuffer = fs.readFileSync(pngPath);
 	return `data:image/png;base64,${avatarBuffer.toString("base64")}`;
 }
 
 function loadIconBase64(): string {
-	let iconPath = "./public/favicon/favicon-dark-192.png";
-	if (siteConfig.favicon.length > 0) {
-		iconPath = `./public${siteConfig.favicon[0].src}`;
+	// 优先使用配置的 PNG 图标，非 PNG 格式（如 .ico）则使用内置 PNG 回退
+	const configSrc = siteConfig.favicon?.[0]?.src;
+	const iconPath =
+		configSrc && configSrc.endsWith(".png")
+			? `./public${configSrc}`
+			: "./public/favicon.png";
+
+	if (!fs.existsSync(iconPath)) {
+		throw new Error(
+			`[OG 图片生成] 缺少图标 PNG 资源！\n` +
+				`请将 PNG 格式的网站图标放到: ${iconPath.replace("./", "")}`,
+		);
 	}
+
 	const iconBuffer = fs.readFileSync(iconPath);
 	return `data:image/png;base64,${iconBuffer.toString("base64")}`;
 }
