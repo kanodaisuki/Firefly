@@ -274,16 +274,16 @@ export const siteConfig: SiteConfig = {
 			// 宽度到转换规则的映射列表
 			// transformRule 为完整的 tr: 转换规则，直接作为 URL 路径段插入
 			transforms: [
-				{ width: 100, transformRule: "tr:w-100,h-100,c-at_max" }, // 缩略图
-				{ width: 320, transformRule: "tr:w-320,h-320,c-at_max" },
-				{ width: 480, transformRule: "tr:w-480,h-480,c-at_max" },
-				{ width: 640, transformRule: "tr:w-640,h-640,c-at_max" },
-				{ width: 800, transformRule: "tr:w-800,h-800,c-at_max" },
-				{ width: 1080, transformRule: "tr:w-1080,h-1080,c-at_max" },
-				{ width: 1440, transformRule: "tr:w-1440,h-1440,c-at_max" },
-				{ width: 1920, transformRule: "tr:w-1920,h-1920,c-at_max" },
-				{ width: 2880, transformRule: "tr:w-2880,h-2880,c-at_max" },
-				{ width: 3840, transformRule: "tr:w-3840,h-3840,c-at_max" },
+				{ width: 100, transformRule: "tr:w-100" }, // 缩略图
+				{ width: 320, transformRule: "tr:w-320" },
+				{ width: 480, transformRule: "tr:w-480" },
+				{ width: 640, transformRule: "tr:w-640" },
+				{ width: 800, transformRule: "tr:w-800" },
+				{ width: 1080, transformRule: "tr:w-1080" },
+				{ width: 1440, transformRule: "tr:w-1440" },
+				{ width: 1920, transformRule: "tr:w-1920" },
+				{ width: 2880, transformRule: "tr:w-2880" },
+				{ width: 3840, transformRule: "tr:w-3840" },
 			],
 			sizes: "(max-width: 768px) 100vw, (max-width: 1200px) 90vw, 1200px",
 			defaultWidth: 1600,
