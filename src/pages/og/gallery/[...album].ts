@@ -30,11 +30,13 @@ export async function GET({
 		description: album.description || "",
 	});
 
-	const albumDate = album.date ? new Date(album.date).toLocaleDateString('zh', {
-		year: "numeric",
-		month: "short",
-		day: "numeric",
-	}) : null;
+	const albumDate = album.date
+		? new Date(album.date).toLocaleDateString("zh", {
+				year: "numeric",
+				month: "short",
+				day: "numeric",
+			})
+		: null;
 
 	const footerRight = albumDate || album.location || undefined;
 

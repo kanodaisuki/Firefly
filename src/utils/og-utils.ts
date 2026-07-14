@@ -176,7 +176,7 @@ function loadAvatarBase64(): string {
 
 	if (!fs.existsSync(pngPath)) {
 		throw new Error(
-			`[OG 图片生成] 缺少头像 PNG 资源！\n` +
+			"[OG 图片生成] 缺少头像 PNG 资源！\n" +
 				`请将 PNG 格式的头像放到: ${pngPath.replace("./", "")}\n` +
 				`原始配置路径: ${profileConfig.avatar}`,
 		);
@@ -196,7 +196,7 @@ function loadIconBase64(): string {
 
 	if (!fs.existsSync(iconPath)) {
 		throw new Error(
-			`[OG 图片生成] 缺少图标 PNG 资源！\n` +
+			"[OG 图片生成] 缺少图标 PNG 资源！\n" +
 				`请将 PNG 格式的网站图标放到: ${iconPath.replace("./", "")}`,
 		);
 	}
