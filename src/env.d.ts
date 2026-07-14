@@ -45,6 +45,8 @@ declare global {
 
 	interface ITOCManager {
 		init: () => void;
+		render: () => void;
+		attach: () => void;
 		cleanup: () => void;
 	}
 
