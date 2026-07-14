@@ -225,9 +225,7 @@ const sizes = "(max-width: 768px) 100vw, (max-width: 1600px) 80vw, 1300px";
   <!-- 评论 -->
   {albumMeta.comment && !albumMeta.password && <Comment customPath={`/gallery/${albumMeta.id}/`} title={albumMeta.name} />}
 
-</MainGridLayout>
-
-<script slot="head" is:inline define:vars={{ baseUrl: import.meta.env.BASE_URL }}>
+  <script is:inline define:vars={{ baseUrl: import.meta.env.BASE_URL }}>
   const isSafeGalleryPath = (path) => {
     if (!path || !path.startsWith("/") || path.startsWith("//")) return false;
     if (path === "/gallery" || path === "/gallery/") return true;
@@ -264,3 +262,5 @@ const sizes = "(max-width: 768px) 100vw, (max-width: 1600px) 80vw, 1300px";
     applyGalleryBackLink();
   }
 </script>
+
+</MainGridLayout>
