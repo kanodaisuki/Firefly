@@ -12,12 +12,18 @@ import { detectBuildPlatform } from "@/utils/build-platform";
 import { formatDateI18nWithTime } from "@/utils/date-utils";
 
 interface Props {
+	id?: string;
 	class?: string;
 	style?: string;
 	widgetConfig?: WidgetComponentConfig;
 }
 
-const { class: className, style, widgetConfig } = Astro.props;
+const {
+	id: widgetId = "site-info",
+	class: className,
+	style,
+	widgetConfig,
+} = Astro.props;
 
 const showTitle = widgetConfig?.showTitle !== false;
 
@@ -163,7 +169,7 @@ const detailItems: {
 <WidgetLayout
   name={i18n(I18nKey.siteInfo)}
   showTitle={showTitle}
-  id="site-info"
+  id={widgetId}
   class={className}
   style={style}
 >

@@ -234,7 +234,7 @@ export type SiteConfig = {
 			domains?: string[];
 			/**
 			 * ImageKit URL 中的路径前缀
-			 * 例如 URL 为 https://pic.kanochan.net/kanochan/... 时可设为 "kanochan"
+			 * 例如 URL 为 https://p.kksk.ltd/kanochan/... 时可设为 "kanochan"
 			 * 可设为空字符串 ""，此时转换参数会放在域名后（/tr:.../path）
 			 */
 			pathPrefix?: string;

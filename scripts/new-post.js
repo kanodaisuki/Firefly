@@ -43,16 +43,34 @@ if (!fs.existsSync(dirPath)) {
 }
 
 const content = `---
+# 文章标题
 title: ${args[0]}
+# 发布日期
 published: ${getDate()}
-description: ''
-image: ''
+# 更新日期
+updated: ${getDate()}
+# 文章摘要
+description: ""
+# 封面图片
+image: "api"
+# 文章标签
 tags: []
-category: ''
-draft: false 
-lang: ''
+# 文章分类
+category: ""
+# 是否为草稿
+draft: false
+# 是否置顶文章
+pinned: false
+# 自定义url路径
+slug: ""
+# 文章语言
+lang: "zh-CN"
+# 文章作者
+author: "KanoChan"
+# 是否启用评论
+comment: true
 ---
-`
+`;
 
 fs.writeFileSync(path.join(targetDir, fileName), content)
 
