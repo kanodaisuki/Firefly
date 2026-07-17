@@ -79,6 +79,22 @@ export type FontSelectionConfig = {
 		{
 			/** 额外包含的字符（覆盖评论、Bangumi 等动态内容） */
 			extraChars?: string;
+			/**
+			 * 可变字体变量轴控制（仅对含 `fvar` 表的可变字体生效）。
+			 *
+			 * key 为轴标签（如 `wght`/`wdth`/`slnt`/`opsz`/`GRAD`），value 两种形式：
+			 *   - `number`：将该轴 pin 到单值（instancing，产物变为静态实例，体积最小）
+			 *   - `{ min, max, default? }`：缩小轴范围但保留可变性，体积介于全范围与 pin 之间
+			 *
+			 * 未列出的轴原样保留。脚本会同步 patch CSS `@font-face` 的 `font-weight`
+			 * 声明使其匹配 `wght` 轴裁剪后的范围（其他轴不影响 CSS 声明）。
+			 *
+			 * @see https://github.com/papandreou/subset-font#variationaxes
+			 */
+			variationAxes?: Record<
+				string,
+				number | { min: number; max: number; default?: number }
+			>;
 		}
 	>;
 };

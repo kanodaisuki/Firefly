@@ -20,6 +20,15 @@
  *
  * 本地字体子集化：在 fontConfig.subsetFonts 中添加对应 cssVariable 的配置，
  * 构建时脚本会自动扫描页面字符并生成轻量 woff2 子集。
+ *
+ * 可变字体（Variable Font，文件含 fvar 表，如 MiSansVF.ttf）支持：
+ *   在 subsetFonts 条目下配置 variationAxes 来控制变量轴，三种模式：
+ *   - 不配置 variationAxes：保留全部变量轴，产物仍是可变字体（体积最大）
+ *   - variationAxes.wght: { min, max }：缩小字重范围但保留可变性（推荐，体积介于二者间）
+ *   - variationAxes.wght: <number>：pin 到单值，产物变为静态实例（体积最小，失去可变性）
+ *   脚本会同步 patch CSS @font-face 的 font-weight 声明使其匹配 wght 裁剪后的范围。
+ *   仅 wght 轴会影响 CSS；其他轴（wdth/slnt/opsz/GRAD）仅影响子集化，不改 CSS 声明。
+ *   variant 的 weight 留空时，Astro 会通过 fontace 自动读取 fvar 输出范围语法。
  */
 import type { FontDefinition, FontSelectionConfig } from "@/types/fontConfig";
 
