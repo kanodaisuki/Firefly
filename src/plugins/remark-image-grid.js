@@ -77,7 +77,8 @@ export function remarkImageGrid() {
 									className: [
 										"image-grid",
 										"grid",
-										"grid-cols-1",
+										"max-[400px]:grid-cols-1",
+										"grid-cols-2",
 										mdColClass,
 										"gap-4",
 										"my-4",
@@ -137,7 +138,8 @@ export function remarkImageGrid() {
 									className: [
 										"image-grid",
 										"grid",
-										"grid-cols-1",
+										"max-[400px]:grid-cols-1",
+										"grid-cols-2",
 										mdColClass,
 										"gap-4",
 										"my-4",
