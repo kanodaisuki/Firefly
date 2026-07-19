@@ -15,7 +15,7 @@ export const MERMAID_WRAPPER = "mermaid-wrapper";
 export const MERMAID_SVG_LIGHT = "mermaid-svg-light";
 export const MERMAID_SVG_DARK = "mermaid-svg-dark";
 export const MERMAID_ERROR = "mermaid-error";
-export const MERMAID_FALLBACK_CODE = "mermaid-fallback-code";
+export const MERMAID_FALLBACK_CODE = "mermaid-fallback-code custom-scrollbar";
 
 // PlantUML
 export const PLANTUML_CONTAINER = "plantuml-diagram-container";

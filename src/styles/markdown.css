@@ -127,6 +127,11 @@
     overscroll-behavior-x: contain;
   }
 
+  .katex-display-container.has-horizontal-overflow,
+  .horizontal-scroll-container.has-horizontal-overflow {
+    padding-bottom: 0.35rem;
+  }
+
   .image-grid {
     @apply items-stretch;
     

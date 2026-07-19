@@ -40,7 +40,7 @@ function clickTab(tabId: string) {
 </script>
 
 <div class="border-b border-(--line-divider) mb-3">
-  <div class="overflow-x-auto" data-tab-scroll-container>
+  <div class="overflow-x-auto custom-scrollbar" data-tab-scroll-container>
     <nav class="flex min-w-max space-x-8" aria-label="Tabs">
       {#each tabs as tab}
         <button

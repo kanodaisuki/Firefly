@@ -803,7 +803,7 @@ function disableAnimation() {
   ]);
 
   function initCustomScrollbar() {
-    // 只处理katex元素的滚动条，使用浏览器原生滚动条
+    // 处理 KaTeX 与 Markdown 代码块横向溢出，并应用统一滚动条主题样式
     const katexElements = document.querySelectorAll(
       ".katex-display:not([data-scrollbar-initialized])"
     ) as NodeListOf<HTMLElement>;
@@ -811,16 +811,22 @@ function disableAnimation() {
       if (!element.parentNode) return;
 
       const container = document.createElement("div");
-      container.className = "katex-display-container";
+      container.className = "katex-display-container custom-scrollbar";
       element.parentNode.insertBefore(container, element);
       container.appendChild(element);
 
-      // 使用浏览器原生滚动条，无自定义样式
-      container.style.cssText = `
-			overflow-x: auto;
-		`;
-
       element.setAttribute("data-scrollbar-initialized", "true");
+    });
+
+    const markdownCodeBlocks = document.querySelectorAll(
+      ".custom-md pre:not([data-scrollbar-initialized])"
+    ) as NodeListOf<HTMLElement>;
+
+    markdownCodeBlocks.forEach((codeBlock) => {
+      // expressive-code 的 pre 已通过 CSS 后代选择器应用滚动条样式，跳过避免重复
+      if (codeBlock.closest(".expressive-code")) return;
+      codeBlock.classList.add("custom-scrollbar");
+      codeBlock.setAttribute("data-scrollbar-initialized", "true");
     });
   }
 
@@ -831,12 +837,13 @@ function disableAnimation() {
 
     markdownTables.forEach((table) => {
       if (table.parentElement?.classList.contains("horizontal-scroll-container")) {
+        table.parentElement.classList.add("custom-scrollbar");
         table.dataset.horizontalScrollReady = "true";
         return;
       }
 
       const container = document.createElement("div");
-      container.className = "horizontal-scroll-container";
+      container.className = "horizontal-scroll-container custom-scrollbar";
       table.parentNode?.insertBefore(container, table);
       container.appendChild(table);
       table.dataset.horizontalScrollReady = "true";
@@ -844,9 +851,22 @@ function disableAnimation() {
 
   }
 
+  function updateHorizontalOverflowState() {
+    // 仅处理实际使用 has-horizontal-overflow 样式的容器，避免对全站 custom-scrollbar 元素调用 getComputedStyle
+    const overflowContainers = document.querySelectorAll(
+      ".katex-display-container, .horizontal-scroll-container"
+    ) as NodeListOf<HTMLElement>;
+
+    overflowContainers.forEach((container) => {
+      const hasHorizontalOverflow = container.scrollWidth - container.clientWidth > 1;
+      container.classList.toggle("has-horizontal-overflow", hasHorizontalOverflow);
+    });
+  }
+
   function initContentOverflowEnhancements() {
     initCustomScrollbar();
     initHorizontalOverflowContainers();
+    updateHorizontalOverflowState();
   }
 
   function scheduleContentOverflowEnhancements() {
@@ -1462,6 +1482,7 @@ function disableAnimation() {
       "--banner-height-extend",
       `${offset}px`
     );
+    updateHorizontalOverflowState();
   };
 
   // 页面加载完成后初始化banner和内容溢出容器

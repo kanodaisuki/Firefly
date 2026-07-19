@@ -41,7 +41,7 @@ function goToPage(page: number) {
 </script>
 
 {#if totalPages > 1}
-  <div class="responsive-pagination flex justify-center items-center mt-8">
+  <div class="responsive-pagination custom-scrollbar flex justify-center items-center mt-8">
     <!-- 移动端简化版分页 -->
     <div class="mobile-pagination items-center gap-3">
       <button

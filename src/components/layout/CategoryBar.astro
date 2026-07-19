@@ -72,7 +72,7 @@ function initialActive(categoryName: string): {
     <div class="category-divider shrink-0"></div>
     <div class="scroll-area relative">
       <div class="scroll-fade scroll-fade-left" aria-hidden="true"></div>
-      <div class="category-scroll flex gap-2 overflow-x-auto">
+      <div class="category-scroll custom-scrollbar flex gap-2 overflow-x-auto">
         {
           categories.map((cat) => {
             const active = initialActive(cat.name);
@@ -159,12 +159,7 @@ function initialActive(categoryName: string): {
     display: none;
   }
   .category-scroll {
-    scrollbar-width: none;
-    -ms-overflow-style: none;
     scroll-behavior: smooth;
-  }
-  .category-scroll::-webkit-scrollbar {
-    display: none;
   }
 </style>
 

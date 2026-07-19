@@ -462,7 +462,6 @@ dynamic-feed {
 	gap: 0.35rem;
 	overflow-x: auto;
 	padding: 0.5rem;
-	scrollbar-width: thin;
 }
 
 .dynamic-gallery-thumbnail {

@@ -1,49 +1,65 @@
 /* 通用自定义滚动条样式 */
-.custom-scrollbar {
+.custom-scrollbar,
+.custom-md .expressive-code pre {
     scrollbar-width: thin;
-    scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
+    scrollbar-color: var(--scrollbar-bg) transparent;
 }
 
-.dark .custom-scrollbar {
-    scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+/* 仅对可能出现纵向滚动的代码块预留滚动条空间，避免折叠/展开时布局抖动；
+   横向滚动容器（分页、分类栏、标签导航等）不需要预留纵向 gutter */
+.custom-md pre.custom-scrollbar,
+.custom-md .expressive-code pre,
+.mermaid-fallback-code {
+    scrollbar-gutter: stable;
 }
 
-.custom-scrollbar::-webkit-scrollbar {
-    width: 6px;
+.custom-scrollbar::-webkit-scrollbar,
+.custom-md .expressive-code pre::-webkit-scrollbar,
+.expressive-code pre.custom-scrollbar::-webkit-scrollbar {
+    width: 7px;
+    height: 7px;
 }
 
-.custom-scrollbar::-webkit-scrollbar-track {
+.custom-scrollbar::-webkit-scrollbar:horizontal,
+.custom-md .expressive-code pre::-webkit-scrollbar:horizontal,
+.expressive-code pre.custom-scrollbar::-webkit-scrollbar:horizontal {
+    height: 7px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track,
+.custom-md .expressive-code pre::-webkit-scrollbar-track,
+.expressive-code pre.custom-scrollbar::-webkit-scrollbar-track {
     background: transparent;
-    border-radius: 3px;
+    border-radius: 999px;
+    -webkit-border-radius: 999px;
 }
 
-.custom-scrollbar::-webkit-scrollbar-thumb {
-    background: linear-gradient(180deg, rgba(0, 0, 0, 0.1) 0%, rgba(0, 0, 0, 0.2) 100%);
-    border-radius: 3px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
+.custom-scrollbar::-webkit-scrollbar-thumb,
+.custom-md .expressive-code pre::-webkit-scrollbar-thumb,
+.expressive-code pre.custom-scrollbar::-webkit-scrollbar-thumb {
+    background: var(--scrollbar-bg);
+    border-radius: 999px;
+    -webkit-border-radius: 999px;
+    border: 1px solid transparent;
+    background-clip: padding-box;
     transition: all 0.2s ease;
 }
 
-.custom-scrollbar::-webkit-scrollbar-thumb:hover {
-    background: linear-gradient(180deg, rgba(0, 0, 0, 0.2) 0%, rgba(0, 0, 0, 0.3) 100%);
-    border-color: rgba(255, 255, 255, 0.2);
+.custom-scrollbar::-webkit-scrollbar-thumb:horizontal,
+.custom-md .expressive-code pre::-webkit-scrollbar-thumb:horizontal,
+.expressive-code pre.custom-scrollbar::-webkit-scrollbar-thumb:horizontal {
+    border-radius: 999px;
+    -webkit-border-radius: 999px;
 }
 
-.custom-scrollbar::-webkit-scrollbar-thumb:active {
-    background: linear-gradient(180deg, rgba(0, 0, 0, 0.3) 0%, rgba(0, 0, 0, 0.4) 100%);
+.custom-scrollbar::-webkit-scrollbar-thumb:hover,
+.custom-md .expressive-code pre::-webkit-scrollbar-thumb:hover,
+.expressive-code pre.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: var(--scrollbar-bg-hover);
 }
 
-/* 暗色模式滚动条 - Webkit */
-.dark .custom-scrollbar::-webkit-scrollbar-thumb {
-    background: linear-gradient(180deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.2) 100%);
-    border: 1px solid rgba(0, 0, 0, 0.1);
-}
-
-.dark .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-    background: linear-gradient(180deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0.3) 100%);
-    border-color: rgba(0, 0, 0, 0.2);
-}
-
-.dark .custom-scrollbar::-webkit-scrollbar-thumb:active {
-    background: linear-gradient(180deg, rgba(255, 255, 255, 0.3) 0%, rgba(255, 255, 255, 0.4) 100%);
+.custom-scrollbar::-webkit-scrollbar-thumb:active,
+.custom-md .expressive-code pre::-webkit-scrollbar-thumb:active,
+.expressive-code pre.custom-scrollbar::-webkit-scrollbar-thumb:active {
+    background: var(--scrollbar-bg-active);
 }
